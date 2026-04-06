@@ -1,148 +1,160 @@
-import { Link } from 'react-router';
+﻿import { Calendar, Clock, DollarSign, FileText, HelpCircle, MessageCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 import { SearchBar } from '../components/SearchBar';
-import { HelpCircle, FileText, MessageCircle, Calendar, DollarSign, Clock } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { useContent } from '../context/ContentContext';
+import type { FAQIcon } from '../types/content';
 
 export function Home() {
-  const faqCategories = [
-    {
-      icon: FileText,
-      title: 'Matrícula',
-      description: 'Dúvidas sobre processo de matrícula e documentação',
-      color: 'bg-blue-100 text-blue-600',
-    },
-    {
-      icon: Clock,
-      title: 'Horários',
-      description: 'Informações sobre horários de aula e funcionamento',
-      color: 'bg-green-100 text-green-600',
-    },
-    {
-      icon: DollarSign,
-      title: 'Financeiro',
-      description: 'Mensalidades, boletos e formas de pagamento',
-      color: 'bg-purple-100 text-purple-600',
-    },
-    {
-      icon: Calendar,
-      title: 'Calendário',
-      description: 'Datas importantes, feriados e eventos',
-      color: 'bg-orange-100 text-orange-600',
-    },
-  ];
+  const navigate = useNavigate();
+  const {
+    content: { announcements, faqCategories, home },
+  } = useContent();
 
-  const recentAnnouncements = [
-    {
-      title: 'Recesso de Meio de Ano',
-      date: '20/03/2026',
-      description: 'Informamos que haverá recesso escolar de 01 a 07 de julho.',
-    },
-    {
-      title: 'Reunião de Pais',
-      date: '18/03/2026',
-      description: 'Reunião de pais e responsáveis no dia 30/03 às 19h.',
-    },
-    {
-      title: 'Novo Portal do Aluno',
-      date: '15/03/2026',
-      description: 'Já está disponível a nova versão do Portal do Aluno com mais funcionalidades.',
-    },
-  ];
+  const iconMap: Record<FAQIcon, typeof FileText> = {
+    FileText,
+    Clock,
+    DollarSign,
+    Calendar,
+  };
+
+  const colorMap: Record<FAQIcon, string> = {
+    FileText: 'bg-blue-100 text-blue-600',
+    Clock: 'bg-green-100 text-green-600',
+    DollarSign: 'bg-violet-100 text-violet-600',
+    Calendar: 'bg-orange-100 text-orange-600',
+  };
+
+  const recentAnnouncements = [...announcements]
+    .sort((left, right) => right.date.localeCompare(left.date))
+    .slice(0, 3);
+
+  const formatDate = (value: string) =>
+    new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR');
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl mb-4">Central de Ajuda</h1>
-            <p className="text-xl text-blue-100 mb-8">
-              Encontre respostas rápidas para suas dúvidas
-            </p>
+      <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 text-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 text-center">
+            <h1 className="mb-4 text-4xl md:text-5xl">{home.heroTitle}</h1>
+            <p className="mb-8 text-xl text-blue-100">{home.heroSubtitle}</p>
           </div>
-          <SearchBar />
+
+          <SearchBar
+            onSearch={(query) => {
+              const trimmedQuery = query.trim();
+
+              if (!trimmedQuery) {
+                navigate('/faq');
+                return;
+              }
+
+              navigate(`/faq?busca=${encodeURIComponent(trimmedQuery)}`);
+            }}
+          />
         </div>
       </section>
 
-      {/* FAQ Categories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl text-gray-900">Categorias de Dúvidas</h2>
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Card className="border-0 bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl text-gray-900">{home.featuredTitle}</CardTitle>
+            <CardDescription className="text-base text-gray-600">
+              {home.featuredDescription}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl text-gray-900 md:text-3xl">{home.faqSectionTitle}</h2>
           <Link
             to="/faq"
-            className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            className="flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700"
           >
             Ver todas
-            <HelpCircle className="w-5 h-5" />
+            <HelpCircle className="h-5 w-5" />
           </Link>
         </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {faqCategories.map((category) => (
-            <Link key={category.title} to="/faq" className="group">
-              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-lg ${category.color} flex items-center justify-center mb-3`}>
-                    <category.icon className="w-6 h-6" />
-                  </div>
-                  <CardTitle className="group-hover:text-blue-600 transition-colors">
-                    {category.title}
-                  </CardTitle>
-                  <CardDescription>{category.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
-          ))}
+
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {faqCategories.map((category) => {
+            const Icon = iconMap[category.icon];
+
+            return (
+              <Link key={category.id} to="/faq" className="group">
+                <Card className="h-full cursor-pointer transition-shadow hover:shadow-lg">
+                  <CardHeader>
+                    <div
+                      className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg ${colorMap[category.icon]}`}
+                    >
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <CardTitle className="transition-colors group-hover:text-blue-600">
+                      {category.label}
+                    </CardTitle>
+                    <CardDescription>{category.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      {/* Recent Announcements */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl text-gray-900">Comunicados Recentes</h2>
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl text-gray-900 md:text-3xl">
+            {home.announcementsSectionTitle}
+          </h2>
           <Link
             to="/comunicados"
-            className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            className="flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700"
           >
             Ver todos
-            <FileText className="w-5 h-5" />
+            <FileText className="h-5 w-5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {recentAnnouncements.map((announcement, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">{announcement.date}</span>
-                </div>
-                <CardTitle className="text-lg">{announcement.title}</CardTitle>
-                <CardDescription>{announcement.description}</CardDescription>
-              </CardHeader>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {recentAnnouncements.length > 0 ? (
+            recentAnnouncements.map((announcement) => (
+              <Card key={announcement.id} className="transition-shadow hover:shadow-lg">
+                <CardHeader>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm text-gray-500">{formatDate(announcement.date)}</span>
+                  </div>
+                  <CardTitle className="text-lg">{announcement.title}</CardTitle>
+                  <CardDescription>{announcement.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))
+          ) : (
+            <Card className="md:col-span-3">
+              <CardContent className="pt-6 text-gray-600">
+                Nenhum comunicado foi publicado até o momento.
+              </CardContent>
             </Card>
-          ))}
+          )}
         </div>
       </section>
 
-      {/* Quick Access */}
       <section className="bg-blue-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl text-gray-900 mb-3">
-              Precisa de Ajuda Rápida?
-            </h2>
-            <p className="text-gray-600">
-              Use nosso chatbot inteligente para respostas instantâneas
-            </p>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 text-center">
+            <h2 className="mb-3 text-2xl text-gray-900 md:text-3xl">{home.chatbotTitle}</h2>
+            <p className="text-gray-600">{home.chatbotDescription}</p>
           </div>
-          
+
           <div className="flex justify-center">
             <Link
               to="/chatbot"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg flex items-center gap-2 transition-colors shadow-lg"
+              className="flex items-center gap-2 rounded-full bg-blue-600 px-8 py-4 text-lg text-white shadow-lg transition-colors hover:bg-blue-700"
             >
-              <MessageCircle className="w-6 h-6" />
-              Abrir Chatbot
+              <MessageCircle className="h-6 w-6" />
+              {home.chatbotButtonLabel}
             </Link>
           </div>
         </div>

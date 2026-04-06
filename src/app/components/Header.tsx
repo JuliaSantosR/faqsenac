@@ -1,12 +1,13 @@
-import { Link, useLocation } from 'react-router';
-import { Menu, X, GraduationCap } from 'lucide-react';
+﻿import { GraduationCap, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router';
+import { useAuth } from '../context/AuthContext';
+import { Button } from './ui/button';
 
 export function Header() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const isActive = (path: string) => location.pathname === path;
+  const { isAuthenticated, logout } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Início' },
@@ -15,61 +16,74 @@ export function Header() {
     { path: '/chatbot', label: 'Chatbot' },
   ];
 
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-6 h-6 text-white" />
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+              <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <div className="hidden sm:block">
-              <div className="font-bold text-lg text-gray-900">Instituição Educacional</div>
+              <div className="text-lg font-bold text-gray-900">Instituição Educacional</div>
               <div className="text-xs text-gray-600">Central de Ajuda</div>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="hidden items-center gap-4 md:flex">
+            <nav className="flex items-center gap-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`rounded-lg px-4 py-2 transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
 
-          {/* Mobile menu button */}
+            <div className="flex items-center gap-2">
+              <Button asChild variant={isAuthenticated ? 'default' : 'outline'}>
+                <Link to={isAuthenticated ? '/admin' : '/login'}>
+                  {isAuthenticated ? 'Painel Admin' : 'Entrar'}
+                </Link>
+              </Button>
+              {isAuthenticated ? (
+                <Button variant="ghost" onClick={logout}>
+                  Sair
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="rounded-lg p-2 hover:bg-gray-100 md:hidden"
+            onClick={() => setMobileMenuOpen((current) => !current)}
             aria-label="Menu"
           >
             {mobileMenuOpen ? (
-              <X className="w-6 h-6 text-gray-700" />
+              <X className="h-6 w-6 text-gray-700" />
             ) : (
-              <Menu className="w-6 h-6 text-gray-700" />
+              <Menu className="h-6 w-6 text-gray-700" />
             )}
           </button>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t">
+        {mobileMenuOpen ? (
+          <nav className="border-t py-4 md:hidden">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-lg transition-colors ${
+                className={`block rounded-lg px-4 py-3 transition-colors ${
                   isActive(item.path)
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-700 hover:bg-gray-100'
@@ -78,8 +92,30 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+
+            <div className="mt-3 flex flex-col gap-2 px-4">
+              <Button asChild variant={isAuthenticated ? 'default' : 'outline'}>
+                <Link
+                  to={isAuthenticated ? '/admin' : '/login'}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {isAuthenticated ? 'Painel Admin' : 'Entrar'}
+                </Link>
+              </Button>
+              {isAuthenticated ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Sair
+                </Button>
+              ) : null}
+            </div>
           </nav>
-        )}
+        ) : null}
       </div>
     </header>
   );
