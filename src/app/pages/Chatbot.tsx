@@ -20,12 +20,17 @@ export function Chatbot() {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Scroll automático apenas na área do chat, se necessário
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      // Só faz scroll se o conteúdo for maior que a área visível
+      if (chatContainer.scrollHeight > chatContainer.clientHeight) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }
   }, [messages]);
 
   // Respostas automáticas simuladas
@@ -49,6 +54,10 @@ export function Chatbot() {
     }
 
     if (lowerMessage.includes('contato') || lowerMessage.includes('telefone')) {
+      return 'Você pode nos contatar pelos telefones (11) 1234-5678 ou (11) 98765-4321, ou pelo e-mail contato@instituicao.edu.br. Nosso horário de atendimento é de segunda a sexta, das 8h às 18h.';
+    }
+
+    if (lowerMessage.includes('liga') || lowerMessage.includes('ligar')){
       return 'Você pode nos contatar pelos telefones (11) 1234-5678 ou (11) 98765-4321, ou pelo e-mail contato@instituicao.edu.br. Nosso horário de atendimento é de segunda a sexta, das 8h às 18h.';
     }
 
@@ -132,7 +141,7 @@ export function Chatbot() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" ref={chatContainerRef}>
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="space-y-4">
             {messages.map((message) => (
