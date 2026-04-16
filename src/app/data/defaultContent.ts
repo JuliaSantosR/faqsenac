@@ -6,12 +6,10 @@ export const defaultSiteContent: SiteContent = {
     heroSubtitle: 'Encontre respostas rápidas para as principais dúvidas da escola.',
     featuredTitle: 'Atendimento simplificado para famílias e estudantes',
     featuredDescription:
-      'Consulte perguntas frequentes, acompanhe comunicados oficiais e use o chatbot para obter apoio inicial a qualquer momento.',
+      'Consulte perguntas frequentes e acompanhe comunicados oficiais.',
     faqSectionTitle: 'Categorias de Dúvidas',
     announcementsSectionTitle: 'Comunicados Recentes',
-    chatbotTitle: 'Precisa de ajuda rápida?',
-    chatbotDescription: 'Use nosso chatbot para orientações iniciais e navegue pelo conteúdo oficial.',
-    chatbotButtonLabel: 'Abrir Chatbot',
+    
   },
   faqCategories: [
     {

@@ -1,49 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+// Chatbot removed from project scope.
+// This file remains as a harmless placeholder to avoid build errors if still imported.
+import React from 'react';
 
-interface Message {
-  id: number;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
+export default function ChatbotRemoved() {
+  return null;
 }
-
-export function Chatbot() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: 'Olá! Bem-vindo à Central de Ajuda. Como posso ajudá-lo hoje?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Scroll automático apenas na área do chat, se necessário
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const chatContainer = chatContainerRef.current;
-    if (chatContainer) {
-      // Só faz scroll se o conteúdo for maior que a área visível
-      if (chatContainer.scrollHeight > chatContainer.clientHeight) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }
-  }, [messages]);
-
-  // Respostas automáticas simuladas
-  const getBotResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-
-    if (lowerMessage.includes('matrícula') || lowerMessage.includes('matricula')) {
-      return 'Para informações sobre matrícula, você precisa apresentar: RG, CPF, comprovante de residência e histórico escolar. O período de matrícula ocorre entre novembro e dezembro. Posso ajudar com mais alguma dúvida?';
-    }
-
-    if (lowerMessage.includes('horário') || lowerMessage.includes('horario')) {
-      return 'A instituição funciona das 7h às 22h de segunda a sexta, e das 8h às 12h aos sábados. Temos três turnos: Manhã (7h30-12h), Tarde (13h-17h30) e Noite (18h30-22h). Precisa de mais informações?';
-    }
 
     if (lowerMessage.includes('pagamento') || lowerMessage.includes('mensalidade')) {
       return 'Aceitamos pagamento via boleto, débito automático, cartão de crédito (até 12x) e PIX. O vencimento padrão é dia 10 de cada mês. Entre em contato com o financeiro para mais detalhes.';
@@ -54,10 +15,6 @@ export function Chatbot() {
     }
 
     if (lowerMessage.includes('contato') || lowerMessage.includes('telefone')) {
-      return 'Você pode nos contatar pelos telefones (11) 1234-5678 ou (11) 98765-4321, ou pelo e-mail contato@instituicao.edu.br. Nosso horário de atendimento é de segunda a sexta, das 8h às 18h.';
-    }
-
-    if (lowerMessage.includes('liga') || lowerMessage.includes('ligar')){
       return 'Você pode nos contatar pelos telefones (11) 1234-5678 ou (11) 98765-4321, ou pelo e-mail contato@instituicao.edu.br. Nosso horário de atendimento é de segunda a sexta, das 8h às 18h.';
     }
 
@@ -141,7 +98,7 @@ export function Chatbot() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto" ref={chatContainerRef}>
+      <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="space-y-4">
             {messages.map((message) => (

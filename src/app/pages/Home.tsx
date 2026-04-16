@@ -1,6 +1,5 @@
-﻿import { Calendar, Clock, DollarSign, FileText, HelpCircle, MessageCircle } from 'lucide-react';
+﻿import { Calendar, Clock, DollarSign, FileText, HelpCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
-import { SearchBar } from '../components/SearchBar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { useContent } from '../context/ContentContext';
 import type { FAQIcon } from '../types/content';
@@ -41,18 +40,7 @@ export function Home() {
             <p className="mb-8 text-xl text-blue-100">{home.heroSubtitle}</p>
           </div>
 
-          <SearchBar
-            onSearch={(query) => {
-              const trimmedQuery = query.trim();
-
-              if (!trimmedQuery) {
-                navigate('/faq');
-                return;
-              }
-
-              navigate(`/faq?busca=${encodeURIComponent(trimmedQuery)}`);
-            }}
-          />
+          
         </div>
       </section>
 
@@ -141,24 +129,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="bg-blue-50 py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center">
-            <h2 className="mb-3 text-2xl text-gray-900 md:text-3xl">{home.chatbotTitle}</h2>
-            <p className="text-gray-600">{home.chatbotDescription}</p>
-          </div>
-
-          <div className="flex justify-center">
-            <Link
-              to="/chatbot"
-              className="flex items-center gap-2 rounded-full bg-blue-600 px-8 py-4 text-lg text-white shadow-lg transition-colors hover:bg-blue-700"
-            >
-              <MessageCircle className="h-6 w-6" />
-              {home.chatbotButtonLabel}
-            </Link>
-          </div>
-        </div>
-      </section>
+      
     </div>
   );
 }

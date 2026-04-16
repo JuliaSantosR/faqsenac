@@ -35,9 +35,7 @@ export interface HomeContent {
   featuredDescription: string;
   faqSectionTitle: string;
   announcementsSectionTitle: string;
-  chatbotTitle: string;
-  chatbotDescription: string;
-  chatbotButtonLabel: string;
+  
 }
 
 export interface SiteContent {

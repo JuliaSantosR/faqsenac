@@ -362,43 +362,7 @@ export function Admin() {
                       }
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="chatbotTitle">Título do CTA do chatbot</Label>
-                    <Input
-                      id="chatbotTitle"
-                      value={homeForm.chatbotTitle}
-                      onChange={(event) =>
-                        setHomeForm((current) => ({ ...current, chatbotTitle: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="chatbotButtonLabel">Texto do botão</Label>
-                    <Input
-                      id="chatbotButtonLabel"
-                      value={homeForm.chatbotButtonLabel}
-                      onChange={(event) =>
-                        setHomeForm((current) => ({
-                          ...current,
-                          chatbotButtonLabel: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="chatbotDescription">Descrição do CTA do chatbot</Label>
-                    <Textarea
-                      id="chatbotDescription"
-                      rows={3}
-                      value={homeForm.chatbotDescription}
-                      onChange={(event) =>
-                        setHomeForm((current) => ({
-                          ...current,
-                          chatbotDescription: event.target.value,
-                        }))
-                      }
-                    />
-                  </div>
+                  
                   <div className="flex justify-end md:col-span-2">
                     <Button type="submit">
                       <Save className="h-4 w-4" />

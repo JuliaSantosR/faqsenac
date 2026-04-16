@@ -13,7 +13,6 @@ export function Header() {
     { path: '/', label: 'Início' },
     { path: '/faq', label: 'FAQ' },
     { path: '/comunicados', label: 'Comunicados' },
-    { path: '/chatbot', label: 'Chatbot' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

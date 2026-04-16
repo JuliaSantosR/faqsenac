@@ -168,16 +168,8 @@ export function FAQ() {
 
         <div className="mt-12 rounded-lg bg-blue-50 p-8 text-center">
           <h3 className="mb-3 text-xl text-gray-900">Não encontrou o que procura?</h3>
-          <p className="mb-6 text-gray-600">
-            Entre em contato conosco ou utilize o chatbot para ajuda personalizada.
-          </p>
+          <p className="mb-6 text-gray-600">Entre em contato conosco.</p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              to="/chatbot"
-              className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
-            >
-              Falar com Chatbot
-            </Link>
             <a
               href="mailto:contato@instituicao.edu.br"
               className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-gray-900 transition-colors hover:bg-gray-50"
