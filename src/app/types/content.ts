@@ -1,4 +1,11 @@
-export type FAQIcon = 'FileText' | 'Clock' | 'DollarSign' | 'Calendar';
+export type FAQIcon =
+  | 'FileText'
+  | 'Clock'
+  | 'DollarSign'
+  | 'Calendar'
+  | 'FileCheck'
+  | 'ClipboardList'
+  | 'Users';
 
 export interface FAQEntry {
   id: string;
@@ -12,6 +19,7 @@ export interface FAQCategory {
   id: string;
   label: string;
   description: string;
+  summary?: string;
   icon: FAQIcon;
   items: FAQEntry[];
 }

@@ -1,61 +1,227 @@
-**Add your own guidelines here**
-<!--
+# UniFAQ — Contexto Técnico para Desenvolvimento
 
-System Guidelines
+Documento de referência para assistentes de IA e desenvolvedores. Priorize **decisões de código alinhadas ao domínio PSG** e **ao estado atual do repositório**.
 
-Use this file to provide the AI with rules and guidelines you want it to follow.
-This template outlines a few examples of things you can add. You can add your own sections and format it to suit your needs
+---
 
-TIP: More context isn't always better. It can confuse the LLM. Try and add the most important rules you need
+## 1. Domínio (mínimo necessário)
 
-# General guidelines
+**UniFAQ** é plataforma web da Faculdade Senac Palhoça para **candidatos do Programa Senac de Gratuidade (PSG)** — não para alunos já matriculados.
 
-Any general rules you want the AI to follow.
-For example:
+**PSG** engloba as modalidades: Jovem Aprendiz, Jovem Programador, Ensino Médio.
 
-* Only use absolute positioning when necessary. Opt for responsive and well structured layouts that use flexbox and grid by default
-* Refactor code as you go to keep code clean
-* Keep file sizes small and put helper functions and components in their own files.
+**Critério central de elegibilidade:** renda familiar mensal per capita ≤ **2 salários mínimos federais**.
 
---------------
+O sistema orienta sobre triagem, editais, documentação (autodeclaração de renda, termo de compromisso) e prazos. **Não substitui** a análise oficial da secretaria.
 
-# Design system guidelines
-Rules for how the AI should make generations look like your company's design system
+---
 
-Additionally, if you select a design system to use in the prompt box, you can reference
-your design system's components, tokens, variables and components.
-For example:
+## 2. Estado atual vs. alvo
 
-* Use a base font-size of 14px
-* Date formats should always be in the format “Jun 10”
-* The bottom toolbar should only ever have a maximum of 4 items
-* Never use the floating action button with the bottom toolbar
-* Chips should always come in sets of 3 or more
-* Don't use a dropdown if there are 2 or fewer options
+| Camada | Estado atual | Alvo |
+|--------|--------------|------|
+| Front-end | React 18 + Vite + TypeScript, funcional | Manter |
+| Roteamento | React Router 7 (`src/app/routes.ts`) | Manter |
+| UI | Tailwind 4 + Radix/shadcn (`src/app/components/ui/`) | Manter padrão existente |
+| Dados | `localStorage` via contexts | Migrar para API NestJS |
+| Auth | Login mock em `AuthContext` (admin hardcoded) | JWT + perfis (candidato / admin) |
+| Back-end | **Ainda não existe no repo** | NestJS + TypeScript + REST |
+| Infra | **Ainda não existe no repo** | Docker Compose (front, back, DB) |
 
-You can also create sub sections and add more specific details
-For example:
+Ao implementar features novas, **prefira não acoplar mais lógica ao localStorage** se a feature claramente pertence ao back-end (auth real, persistência, busca server-side).
 
+---
 
-## Button
-The Button component is a fundamental interactive element in our design system, designed to trigger actions or navigate
-users through the application. It provides visual feedback and clear affordances to enhance user experience.
+## 3. Estrutura do repositório
 
-### Usage
-Buttons should be used for important actions that users need to take, such as form submissions, confirming choices,
-or initiating processes. They communicate interactivity and should have clear, action-oriented labels.
+```
+src/
+├── main.tsx                 # AuthProvider + ContentProvider
+├── app/
+│   ├── App.tsx              # RouterProvider
+│   ├── routes.ts            # Rotas públicas e /admin protegida
+│   ├── types/content.ts     # Tipos de domínio (FAQ, avisos, home)
+│   ├── data/defaultContent.ts   # Seed inicial (⚠ legado escolar — migrar para PSG)
+│   ├── context/
+│   │   ├── AuthContext.tsx      # Auth mock (localStorage)
+│   │   └── ContentContext.tsx   # CRUD de conteúdo (localStorage)
+│   ├── pages/               # Home, FAQ, Comunicados, Login, Admin
+│   └── components/          # Layout, Header, Footer, SearchBar, ui/*
+guidelines/Guidelines.md     # Este arquivo
+fixtures/                    # Documentação acadêmica (referência de negócio)
+```
 
-### Variants
-* Primary Button
-  * Purpose : Used for the main action in a section or page
-  * Visual Style : Bold, filled with the primary brand color
-  * Usage : One primary button per section to guide users toward the most important action
-* Secondary Button
-  * Purpose : Used for alternative or supporting actions
-  * Visual Style : Outlined with the primary color, transparent background
-  * Usage : Can appear alongside a primary button for less important actions
-* Tertiary Button
-  * Purpose : Used for the least important actions
-  * Visual Style : Text-only with no border, using primary color
-  * Usage : For actions that should be available but not emphasized
--->
+**Comandos:** `npm i` · `npm run dev` · `npm run build`
+
+---
+
+## 4. Rotas e fluxos
+
+| Rota | Componente | Acesso |
+|------|------------|--------|
+| `/` | `Home` | Público |
+| `/faq` | `FAQ` | Público; query `?busca=termo` |
+| `/comunicados` | `Comunicados` | Público |
+| `/login` | `Login` | Público |
+| `/admin` | `Admin` via `ProtectedAdminPage` | Autenticado |
+
+**Proteção de rota:** `ProtectedRoute` redireciona para `/login` se `!isAuthenticated`.
+
+---
+
+## 5. Modelo de dados (`src/app/types/content.ts`)
+
+```ts
+SiteContent {
+  home: HomeContent           // textos da landing
+  faqCategories: FAQCategory[]
+  announcements: Announcement[]
+}
+
+FAQCategory { id, label, description, icon, items[] }
+FAQEntry    { id, question, answer, imageUrl, videoUrl }
+Announcement { id, date, category, priority, title, description, details }
+```
+
+**Ícones permitidos hoje:** `FileText | Clock | DollarSign | Calendar` — ao migrar para PSG, estender o union se necessário (ex.: `FileCheck`, `Users`).
+
+**Categorias alvo do FAQ (PSG):** Renda · Editais · Documentação · Inscrições · Critérios de seleção.
+
+**Conteúdo legado a substituir:** `defaultContent.ts` ainda usa categorias escolares (Matrícula, Horários, Financeiro). Novos textos e seeds devem refletir **triagem PSG**.
+
+---
+
+## 6. Contextos e persistência
+
+### ContentContext (`school-help-center-content`)
+
+- CRUD completo de home, categorias FAQ, entries e comunicados.
+- Persiste em `localStorage` a cada alteração.
+- IDs gerados com `crypto.randomUUID()` ou fallback `Date.now()`.
+
+### AuthContext (`school-help-center-auth`)
+
+- Auth **apenas para admin** hoje; credenciais em `ADMIN_CREDENTIALS` (mock).
+- Candidato PSG com login próprio é **requisito de negócio (RF04)**, ainda **não implementado**.
+
+Ao evoluir auth: separar perfis `candidate` | `admin`, remover credenciais hardcoded, integrar JWT do NestJS.
+
+---
+
+## 7. Busca (RF01/RF03) — implementação atual
+
+- Componente: `SearchBar` (controlled, submit dispara callback).
+- Lógica: `FAQ.tsx` filtra client-side com `.includes()` case-insensitive sobre `label`, `description`, `question`, `answer`.
+- Query string: `/faq?busca=renda` sincronizada via `useSearchParams`.
+
+**Restrições:**
+
+- **Não** implementar chatbot, LLM ou respostas generativas.
+- Busca é **determinística** por substring; sem fuzzy match, sinônimos ou NLP no escopo atual.
+- Quando existir back-end: mover filtro para endpoint `GET /faq/search?q=` mantendo o mesmo contrato de UX.
+
+---
+
+## 8. Funcionalidades por requisito
+
+| RF | Feature | Status |
+|----|---------|--------|
+| RF01 | Busca por palavra-chave | ✅ Client-side em `FAQ.tsx` |
+| RF02 | FAQ categorizado | ✅ Tabs + Accordion |
+| RF03 | Lupa (busca avançada) | ✅ Mesma busca; sem chatbot |
+| RF04 | Login candidato PSG | ⚠ Apenas admin mock |
+| RF05 | Mural de avisos | ✅ `Comunicados` + destaque na Home |
+| RF06 | Painel admin (CRUD) | ✅ `Admin.tsx` + ContentContext |
+| RF07 | WhatsApp secretaria | ❌ FAQ tem só e-mail; Footer genérico |
+
+**RF07 pendente:** adicionar link `https://wa.me/55...` (WhatsApp institucional) na seção "Não encontrou?" do FAQ e/ou Footer.
+
+---
+
+## 9. Restrições de escopo (não implementar)
+
+### Fora do domínio PSG
+
+Não adicionar features de aluno matriculado:
+
+- Notas, frequência, disciplinas, calendário escolar, horários de aula, matrícula acadêmica, mensalidades.
+
+Remover ou não expandir referências legadas: "Portal do Aluno", "Área do Responsável", "Calendário Acadêmico" no Footer.
+
+### Fora do escopo técnico atual
+
+- Chatbot / IA generativa na busca
+- NLP, correção ortográfica, embeddings
+
+---
+
+## 10. UI e identidade visual
+
+- **Mobile-first**, responsivo (Tailwind breakpoints `sm`, `md`, `lg`).
+- Cores institucionais Senac: **azul** e **laranja** (RNF05). Home usa gradiente `from-blue-600 to-blue-800`; alinhar acentos laranja onde fizer sentido.
+- Reutilizar componentes em `src/app/components/ui/` (shadcn/Radix) — não introduzir outra lib de componentes sem necessidade.
+- Ícones: `lucide-react`.
+- Textos voltados a **candidatos de baixa renda**: linguagem simples, objetiva, sem jargão burocrático desnecessário.
+
+---
+
+## 11. Segurança e LGPD (RNF04)
+
+Ao implementar back-end e auth real:
+
+- Minimizar coleta de dados pessoais/socioeconômicos.
+- Rotas com dados sensíveis (renda, editais direcionados) exigem autenticação.
+- Não logar dados sensíveis; não commitar credenciais ou `.env`.
+- JWT em header `Authorization: Bearer`; refresh/expiração conforme NestJS guards.
+
+---
+
+## 12. Back-end alvo (NestJS — a criar)
+
+Módulos sugeridos alinhados ao front:
+
+```
+auth/          # login, JWT, perfis candidate | admin
+faq/           # categories, entries, search
+announcements/ # mural de avisos
+users/         # candidatos PSG (dados mínimos)
+```
+
+Endpoints REST consumidos pelo React; validação de regras PSG no server-side.
+
+**Docker Compose:** serviços `frontend`, `api`, `db` — ambiente reproduzível para a equipe.
+
+---
+
+## 13. Convenções de código
+
+- TypeScript estrito; tipos de domínio em `src/app/types/`.
+- Componentes de página em `pages/`, reutilizáveis em `components/`.
+- Estado global só via contexts (ou futuro React Query + API); evitar prop drilling desnecessário.
+- Manter diffs focados; não refatorar arquivos não relacionados à tarefa.
+- Ao alterar `SiteContent`, garantir compatibilidade com JSON já persistido em `localStorage` ou tratar migração.
+- Comentários apenas para lógica não óbvia (regras PSG, edge cases de busca).
+
+---
+
+## 14. Débitos técnicos conhecidos
+
+1. `defaultContent.ts` — conteúdo escolar, não PSG.
+2. `AuthContext` — só admin mock; sem fluxo de candidato.
+3. `Home.tsx` — SearchBar removida/não renderizada no hero (busca só em `/faq`).
+4. `Footer.tsx` — placeholders genéricos; links escolares; sem WhatsApp.
+5. Chaves `localStorage` com prefixo `school-help-center-*` (legado do protótipo Figma).
+6. Back-end NestJS e Docker ainda não existem no repositório.
+
+Priorize correções que alinham **domínio PSG** e **preparam migração para API** quando a tarefa pedir.
+
+---
+
+## 15. Checklist rápido antes de entregar código
+
+- [ ] Feature está no escopo PSG (candidato), não escolar (aluno matriculado)?
+- [ ] Busca permanece determinística (sem IA)?
+- [ ] UI responsiva e consistente com componentes existentes?
+- [ ] Textos/copy refletem triagem, editais, documentação, renda?
+- [ ] Dados sensíveis protegidos (ou preparados para auth real)?
+- [ ] Não expandiu acoplamento desnecessário ao localStorage se a feature é de back-end?

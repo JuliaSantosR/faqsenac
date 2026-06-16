@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { defaultSiteContent } from '../data/defaultContent';
 import type { Announcement, FAQCategory, FAQEntry, HomeContent, SiteContent } from '../types/content';
+import { isFAQIcon } from '../utils/faqIcons';
 
 const CONTENT_STORAGE_KEY = 'school-help-center-content';
 
@@ -46,6 +47,21 @@ function createId(prefix: string) {
   return `${prefix}-${Date.now()}`;
 }
 
+function normalizeContent(content: SiteContent): SiteContent {
+  return {
+    home: {
+      ...defaultSiteContent.home,
+      ...content.home,
+    },
+    faqCategories: (content.faqCategories ?? []).map((category) => ({
+      ...category,
+      icon: isFAQIcon(category.icon) ? category.icon : 'FileText',
+      items: category.items ?? [],
+    })),
+    announcements: content.announcements ?? [],
+  };
+}
+
 function readStoredContent(): SiteContent {
   if (typeof window === 'undefined') {
     return defaultSiteContent;
@@ -58,7 +74,7 @@ function readStoredContent(): SiteContent {
   }
 
   try {
-    return JSON.parse(rawValue) as SiteContent;
+    return normalizeContent(JSON.parse(rawValue) as SiteContent);
   } catch {
     window.localStorage.removeItem(CONTENT_STORAGE_KEY);
     return defaultSiteContent;

@@ -1,8 +1,12 @@
-﻿import { Calendar, Clock, DollarSign, FileText, HelpCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+﻿import { useNavigate } from 'react-router';
+import { AnnouncementFeed } from '../components/AnnouncementFeed';
+import { CategoryCards } from '../components/CategoryCards';
+import { HeroSearch } from '../components/HeroSearch';
+import { SupportWidget } from '../components/SupportWidget';
 import { useContent } from '../context/ContentContext';
-import type { FAQIcon } from '../types/content';
+
+const CLASSROOM_IMAGE =
+  'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop';
 
 export function Home() {
   const navigate = useNavigate();
@@ -10,126 +14,52 @@ export function Home() {
     content: { announcements, faqCategories, home },
   } = useContent();
 
-  const iconMap: Record<FAQIcon, typeof FileText> = {
-    FileText,
-    Clock,
-    DollarSign,
-    Calendar,
+  const handleSearch = (query: string) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      navigate('/faq');
+      return;
+    }
+
+    navigate(`/faq?busca=${encodeURIComponent(trimmedQuery)}`);
   };
-
-  const colorMap: Record<FAQIcon, string> = {
-    FileText: 'bg-blue-100 text-blue-600',
-    Clock: 'bg-green-100 text-green-600',
-    DollarSign: 'bg-violet-100 text-violet-600',
-    Calendar: 'bg-orange-100 text-orange-600',
-  };
-
-  const recentAnnouncements = [...announcements]
-    .sort((left, right) => right.date.localeCompare(left.date))
-    .slice(0, 3);
-
-  const formatDate = (value: string) =>
-    new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR');
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center">
-            <h1 className="mb-4 text-4xl md:text-5xl">{home.heroTitle}</h1>
-            <p className="mb-8 text-xl text-blue-100">{home.heroSubtitle}</p>
+    <div className="min-h-screen bg-[#F8F9FA]">
+      <section className="bg-[#004581] px-4 pt-12 pb-28 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="mb-4 text-3xl font-bold md:text-5xl">{home.heroTitle}</h1>
+          <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-blue-100 md:text-lg">
+            {home.heroSubtitle}
+          </p>
+          <HeroSearch onSearch={handleSearch} />
+        </div>
+      </section>
+
+      <div className="relative z-10 mx-auto -mt-14 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <CategoryCards categories={faqCategories} />
+      </div>
+
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <AnnouncementFeed
+              announcements={announcements}
+              title={home.announcementsSectionTitle}
+              limit={2}
+            />
           </div>
 
-          
+          <div className="space-y-6">
+            <SupportWidget />
+            <img
+              src={CLASSROOM_IMAGE}
+              alt="Professora interagindo com alunos em sala de aula"
+              className="w-full rounded-2xl object-cover shadow-sm"
+            />
+          </div>
         </div>
       </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <Card className="border-0 bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl text-gray-900">{home.featuredTitle}</CardTitle>
-            <CardDescription className="text-base text-gray-600">
-              {home.featuredDescription}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl text-gray-900 md:text-3xl">{home.faqSectionTitle}</h2>
-          <Link
-            to="/faq"
-            className="flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700"
-          >
-            Ver todas
-            <HelpCircle className="h-5 w-5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {faqCategories.map((category) => {
-            const Icon = iconMap[category.icon];
-
-            return (
-              <Link key={category.id} to="/faq" className="group">
-                <Card className="h-full cursor-pointer transition-shadow hover:shadow-lg">
-                  <CardHeader>
-                    <div
-                      className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg ${colorMap[category.icon]}`}
-                    >
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <CardTitle className="transition-colors group-hover:text-blue-600">
-                      {category.label}
-                    </CardTitle>
-                    <CardDescription>{category.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl text-gray-900 md:text-3xl">
-            {home.announcementsSectionTitle}
-          </h2>
-          <Link
-            to="/comunicados"
-            className="flex items-center gap-1 font-medium text-blue-600 hover:text-blue-700"
-          >
-            Ver todos
-            <FileText className="h-5 w-5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {recentAnnouncements.length > 0 ? (
-            recentAnnouncements.map((announcement) => (
-              <Card key={announcement.id} className="transition-shadow hover:shadow-lg">
-                <CardHeader>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">{formatDate(announcement.date)}</span>
-                  </div>
-                  <CardTitle className="text-lg">{announcement.title}</CardTitle>
-                  <CardDescription>{announcement.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))
-          ) : (
-            <Card className="md:col-span-3">
-              <CardContent className="pt-6 text-gray-600">
-                Nenhum comunicado foi publicado até o momento.
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </section>
-
-      
     </div>
   );
 }
