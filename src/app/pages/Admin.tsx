@@ -10,7 +10,7 @@
   Trash2,
   Video,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -106,7 +106,7 @@ export function Admin() {
   const formatDate = (value: string) =>
     new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR');
 
-  const handleSaveHome = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveHome = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!homeForm.heroTitle.trim() || !homeForm.heroSubtitle.trim()) {
@@ -118,7 +118,7 @@ export function Admin() {
     window.alert('Conteúdo da home atualizado com sucesso.');
   };
 
-  const handleSaveCategory = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveCategory = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!selectedCategory) {
@@ -138,7 +138,7 @@ export function Admin() {
     window.alert('Categoria atualizada com sucesso.');
   };
 
-  const handleSaveFAQEntry = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveFAQEntry = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!selectedCategory) {
@@ -168,7 +168,7 @@ export function Admin() {
     resetFAQEntryForm();
   };
 
-  const handleSaveAnnouncement = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveAnnouncement = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (
@@ -203,82 +203,87 @@ export function Admin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <section className="border-b bg-white py-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="mb-2 flex items-center gap-3">
-                <Edit className="h-8 w-8 text-blue-600" />
-                <h1 className="text-3xl text-gray-900">Painel Administrativo</h1>
+    <div className="min-h-screen bg-[#F8F9FA]">
+      <section className="bg-[#004581] px-4 pt-12 pb-28 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="text-center md:text-left">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-xs font-semibold tracking-widest uppercase">
+                <Edit className="h-4 w-4" />
+                Painel administrativo
               </div>
-              <p className="text-gray-600">
-                Gerencie a home, as categorias do FAQ e os comunicados oficiais da escola.
+              <h1 className="mb-4 text-3xl font-bold md:text-4xl">Gerenciar conteúdos</h1>
+              <p className="max-w-2xl text-base leading-relaxed text-blue-100">
+                Gerencie a home, as categorias do FAQ e os comunicados oficiais do UniFAQ.
               </p>
+              <p className="mt-3 text-sm text-blue-200">Logado como {user?.name}</p>
             </div>
 
-            <div className="flex flex-col items-start gap-2 md:items-end">
-              <p className="text-sm text-gray-500">Logado como {user?.name}</p>
-              <Button variant="outline" onClick={logout}>
-                <LogOut className="h-4 w-4" />
-                Sair
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={logout}
+              className="shrink-0 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
-          <div>
-            <p className="text-sm text-gray-800">
-              <strong>Importante:</strong> este painel agora usa a mesma fonte de dados das páginas
-              públicas e salva as alterações no navegador. O conteúdo alterado aqui já reflete em
-              <strong> /</strong>, <strong>/faq</strong> e <strong>/comunicados</strong>.
-            </p>
+      <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="relative z-10 -mt-16 mb-8 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md">
+            <p className="mb-1 text-sm text-gray-500">Página inicial</p>
+            <p className="text-xl font-bold text-gray-900">{home.heroTitle}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md">
+            <p className="mb-1 text-sm text-gray-500">Perguntas cadastradas</p>
+            <p className="text-3xl font-bold text-[#004581]">{totalFAQEntries}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md">
+            <p className="mb-1 text-sm text-gray-500">Comunicados publicados</p>
+            <p className="text-3xl font-bold text-[#004581]">{announcements.length}</p>
           </div>
         </div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Página inicial</CardDescription>
-              <CardTitle>{home.heroTitle}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Perguntas cadastradas</CardDescription>
-              <CardTitle>{totalFAQEntries}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Comunicados publicados</CardDescription>
-              <CardTitle>{announcements.length}</CardTitle>
-            </CardHeader>
-          </Card>
+        <div className="mb-8 flex items-start gap-3 rounded-2xl border border-dashed border-gray-200 bg-white px-5 py-4 shadow-sm">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#004581]" />
+          <p className="text-sm text-gray-600">
+            <strong className="text-gray-900">Importante:</strong> este painel usa a mesma fonte de
+            dados das páginas públicas e salva as alterações no navegador. O conteúdo alterado aqui
+            já reflete em <strong>/</strong>, <strong>/faq</strong> e <strong>/comunicados</strong>.
+          </p>
         </div>
 
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] md:p-6">
         <Tabs defaultValue="home" className="space-y-6">
-          <TabsList className="grid h-auto w-full grid-cols-1 gap-2 md:grid-cols-3">
-            <TabsTrigger value="home" className="py-3">
+          <TabsList className="grid h-auto w-full grid-cols-1 gap-2 rounded-xl bg-gray-100 p-2 md:grid-cols-3">
+            <TabsTrigger
+              value="home"
+              className="rounded-lg py-3 data-[state=active]:bg-[#004581] data-[state=active]:text-white"
+            >
               <LayoutPanelTop className="h-4 w-4" />
               Home
             </TabsTrigger>
-            <TabsTrigger value="faq" className="py-3">
+            <TabsTrigger
+              value="faq"
+              className="rounded-lg py-3 data-[state=active]:bg-[#004581] data-[state=active]:text-white"
+            >
               <HelpCircle className="h-4 w-4" />
               FAQ
             </TabsTrigger>
-            <TabsTrigger value="announcements" className="py-3">
+            <TabsTrigger
+              value="announcements"
+              className="rounded-lg py-3 data-[state=active]:bg-[#004581] data-[state=active]:text-white"
+            >
               <Megaphone className="h-4 w-4" />
               Comunicados
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="home">
-            <Card>
+            <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
               <CardHeader>
                 <CardTitle>Gerenciar conteúdos da home</CardTitle>
                 <CardDescription>
@@ -364,7 +369,10 @@ export function Admin() {
                   </div>
                   
                   <div className="flex justify-end md:col-span-2">
-                    <Button type="submit">
+                    <Button
+                      type="submit"
+                      className="bg-[#FF8C00] text-white hover:bg-[#e67e00]"
+                    >
                       <Save className="h-4 w-4" />
                       Salvar home
                     </Button>
@@ -376,7 +384,7 @@ export function Admin() {
 
           <TabsContent value="faq" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-              <Card>
+              <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
                 <CardHeader>
                   <CardTitle>Categorias do FAQ</CardTitle>
                   <CardDescription>
@@ -391,7 +399,7 @@ export function Admin() {
                       onClick={() => setSelectedCategoryId(category.id)}
                       className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
                         selectedCategoryId === category.id
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          ? 'border-[#004581] bg-blue-50 text-[#004581]'
                           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
@@ -403,7 +411,7 @@ export function Admin() {
               </Card>
 
               <div className="space-y-6">
-                <Card>
+                <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
                   <CardHeader>
                     <CardTitle>Metadados da categoria</CardTitle>
                     <CardDescription>
@@ -440,7 +448,10 @@ export function Admin() {
                         />
                       </div>
                       <div className="flex justify-end">
-                        <Button type="submit">
+                        <Button
+                          type="submit"
+                          className="bg-[#FF8C00] text-white hover:bg-[#e67e00]"
+                        >
                           <Save className="h-4 w-4" />
                           Salvar categoria
                         </Button>
@@ -450,7 +461,7 @@ export function Admin() {
                 </Card>
 
                 <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-                  <Card>
+                  <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
                     <CardHeader>
                       <CardTitle>
                         {faqEntryForm.id ? 'Editar pergunta' : 'Adicionar pergunta'}
@@ -525,7 +536,7 @@ export function Admin() {
                           />
                         </div>
                         <div className="flex flex-wrap gap-3">
-                          <Button type="submit" className="flex-1">
+                          <Button type="submit" className="flex-1 bg-[#FF8C00] text-white hover:bg-[#e67e00]">
                             <Save className="h-4 w-4" />
                             {faqEntryForm.id ? 'Salvar pergunta' : 'Adicionar pergunta'}
                           </Button>
@@ -539,7 +550,7 @@ export function Admin() {
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
                     <CardHeader>
                       <CardTitle>Perguntas publicadas</CardTitle>
                       <CardDescription>
@@ -550,7 +561,7 @@ export function Admin() {
                       <div className="max-h-[560px] space-y-3 overflow-y-auto">
                         {selectedCategory?.items.length ? (
                           selectedCategory.items.map((item) => (
-                            <div key={item.id} className="rounded-lg border p-4">
+                            <div key={item.id} className="rounded-xl border border-gray-100 bg-white p-4">
                               <div className="mb-2 flex items-start justify-between gap-3">
                                 <h3 className="font-medium text-gray-900">{item.question}</h3>
                                 <div className="flex gap-2">
@@ -591,7 +602,7 @@ export function Admin() {
                             </div>
                           ))
                         ) : (
-                          <p className="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-gray-500">
+                          <p className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-gray-500">
                             Nenhuma pergunta cadastrada nesta categoria.
                           </p>
                         )}
@@ -605,7 +616,7 @@ export function Admin() {
 
           <TabsContent value="announcements" className="space-y-6">
             <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-              <Card>
+              <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
                 <CardHeader>
                   <CardTitle>
                     {announcementForm.id ? 'Editar comunicado' : 'Novo comunicado'}
@@ -709,7 +720,7 @@ export function Admin() {
                       />
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      <Button type="submit" className="flex-1">
+                      <Button type="submit" className="flex-1 bg-[#FF8C00] text-white hover:bg-[#e67e00]">
                         <Save className="h-4 w-4" />
                         {announcementForm.id ? 'Salvar comunicado' : 'Publicar comunicado'}
                       </Button>
@@ -723,7 +734,7 @@ export function Admin() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="rounded-xl border border-gray-100 bg-gray-50 shadow-none">
                 <CardHeader>
                   <CardTitle>Comunicados existentes</CardTitle>
                   <CardDescription>
@@ -734,7 +745,7 @@ export function Admin() {
                   <div className="max-h-[650px] space-y-3 overflow-y-auto">
                     {sortedAnnouncements.length ? (
                       sortedAnnouncements.map((announcement) => (
-                        <div key={announcement.id} className="rounded-lg border p-4">
+                        <div key={announcement.id} className="rounded-xl border border-gray-100 bg-white p-4">
                           <div className="mb-3 flex items-start justify-between gap-3">
                             <div>
                               <p className="text-xs uppercase tracking-wide text-gray-500">
@@ -781,7 +792,7 @@ export function Admin() {
                         </div>
                       ))
                     ) : (
-                      <p className="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-gray-500">
+                      <p className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-8 text-center text-gray-500">
                         Nenhum comunicado cadastrado.
                       </p>
                     )}
@@ -791,6 +802,7 @@ export function Admin() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );
