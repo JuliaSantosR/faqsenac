@@ -1,6 +1,32 @@
 # UniFAQ
 
-Plataforma de perguntas frequentes da Faculdade Senac Palhoça para candidatos do Programa Senac de Gratuidade (PSG).
+Plataforma de perguntas frequentes da **Faculdade Senac Palhoça** para candidatos do **Programa Senac de Gratuidade (PSG)**.
+
+O sistema reúne FAQ por categorias, comunicados oficiais e um painel administrativo para editar o conteúdo exibido nas páginas públicas.
+
+## Funcionalidades
+
+### Páginas públicas
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Home com busca, categorias do FAQ e comunicados em destaque |
+| `/faq` | Perguntas frequentes com busca automática e filtro por categoria |
+| `/comunicados` | Mural de avisos e comunicados do PSG |
+
+### Painel admin (`/admin`)
+
+- Edição dos textos da home
+- Gerenciamento de categorias e perguntas do FAQ
+- Suporte a **imagem** e **vídeo** (YouTube/Vimeo) nas respostas
+- Publicação e edição de comunicados
+
+**Credenciais do seed:**
+
+| Campo | Valor |
+|-------|-------|
+| E-mail | `admin@senac.local` |
+| Senha | `admin123` |
 
 ## Estrutura do repositório
 
@@ -12,23 +38,52 @@ faqsenac/
 └── fixtures/     # Materiais de referência acadêmica
 ```
 
-## Frontend
+## Como rodar
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-A aplicação web sobe em `http://localhost:5173`.
-
-## Backend
+### 1. Backend (API + banco)
 
 ```bash
 cd backend
 docker compose up --build
 ```
 
-A API REST sobe em `http://localhost:3000`.
+Na primeira execução, o container aplica as migrações, popula o banco (se vazio) e sobe a API em `http://localhost:3000`.
 
-Consulte [backend/README.md](backend/README.md) para endpoints, credenciais do seed e exemplos de uso.
+### 2. Frontend
+
+Em outro terminal:
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+A aplicação web sobe em `http://localhost:5173`.
+
+O arquivo `.env` do frontend deve apontar para a API:
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+## Stack
+
+| Camada | Tecnologias |
+|--------|-------------|
+| Frontend | React 18, Vite, TypeScript, Tailwind CSS, React Router 7 |
+| Backend | NestJS, Prisma ORM, PostgreSQL, JWT |
+| Infra | Docker Compose (PostgreSQL + API) |
+
+## Documentação adicional
+
+- [frontend/README.md](frontend/README.md) — scripts, variáveis de ambiente e desenvolvimento do SPA
+- [backend/README.md](backend/README.md) — endpoints REST, seed, migrações e exemplos com `curl`
+- [guidelines/Guidelines.md](guidelines/Guidelines.md) — contexto técnico e decisões de arquitetura
+
+## Regras de conteúdo (FAQ)
+
+- Pergunta e resposta exigem **no mínimo 10 caracteres** na API
+- URLs de imagem e vídeo são opcionais; vídeos do YouTube/Vimeo são normalizados para embed
+- Alterações feitas no painel admin refletem nas páginas `/`, `/faq` e `/comunicados`

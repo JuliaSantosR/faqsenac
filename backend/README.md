@@ -63,6 +63,17 @@ cp .env.example .env
 | DELETE | `/faq/categories/:id`   | Admin (JWT) | Remove categoria    |
 
 ### FAQ — Entradas
+
+Campos de criação/edição (`POST` / `PATCH`):
+
+| Campo | Obrigatório | Descrição |
+|-------|-------------|-----------|
+| `question` | Sim | Mínimo 10 caracteres |
+| `answer` | Sim | Mínimo 10 caracteres |
+| `categoryId` | Sim | UUID da categoria |
+| `imageUrl` | Não | URL pública da imagem |
+| `videoUrl` | Não | URL do vídeo (YouTube ou Vimeo) |
+
 | Método | Rota               | Acesso      | Descrição                          |
 |--------|--------------------|-------------|------------------------------------|
 | GET    | `/faq/entries`     | Público     | Lista todas as entradas            |
@@ -100,7 +111,22 @@ Resposta:
 curl "http://localhost:3000/faq/search?q=renda"
 ```
 
-### 3. Criar comunicado (autenticado)
+### 3. Criar pergunta do FAQ com mídia (autenticado)
+
+```bash
+curl -X POST http://localhost:3000/faq/entries \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{
+    "question": "Como comprovar minha renda familiar?",
+    "answer": "Apresente holerites, contracheques ou declaração de renda dos últimos 3 meses.",
+    "categoryId": "<UUID_DA_CATEGORIA>",
+    "imageUrl": "https://exemplo.com/imagem.jpg",
+    "videoUrl": "https://www.youtube.com/watch?v=exemplo"
+  }'
+```
+
+### 4. Criar comunicado (autenticado)
 
 ```bash
 curl -X POST http://localhost:3000/announcements \
