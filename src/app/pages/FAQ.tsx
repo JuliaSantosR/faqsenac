@@ -61,14 +61,29 @@ export function FAQ() {
     }));
   }, [faqCategories, searchQuery]);
 
-  const activeCategoryData =
-    filteredCategories.find((category) => category.id === activeCategory) ??
-    filteredCategories[0];
-
   const resultsCount = filteredCategories.reduce(
     (total, category) => total + category.items.length,
     0,
   );
+
+  const hasActiveSearch = searchQuery.trim().length > 0;
+
+  const activeCategoryData = useMemo(() => {
+    const baseCategory =
+      faqCategories.find((category) => category.id === activeCategory) ?? faqCategories[0];
+
+    if (!baseCategory) {
+      return undefined;
+    }
+
+    if (!hasActiveSearch || resultsCount === 0) {
+      return baseCategory;
+    }
+
+    return (
+      filteredCategories.find((category) => category.id === activeCategory) ?? baseCategory
+    );
+  }, [activeCategory, faqCategories, filteredCategories, hasActiveSearch, resultsCount]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -121,10 +136,9 @@ export function FAQ() {
 
         <div className="relative z-10 mx-auto -mb-6 mt-10 max-w-5xl px-4">
           <CategoryPills
-            categories={filteredCategories}
+            categories={faqCategories}
             activeCategoryId={activeCategory}
             onSelect={handleCategorySelect}
-            getItemCount={(category) => category.items.length}
           />
         </div>
       </section>
