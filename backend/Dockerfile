@@ -1,5 +1,7 @@
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 COPY package*.json tsconfig.json nest-cli.json ./
@@ -17,7 +19,7 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init openssl
 
 COPY package*.json ./
 COPY prisma ./prisma

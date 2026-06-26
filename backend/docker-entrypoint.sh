@@ -15,4 +15,4 @@ prisma.user.count().then(count => {
 " && npx ts-node -r tsconfig-paths/register prisma/seed.ts || true
 
 echo "Iniciando a aplicação..."
-exec node dist/main
+exec node dist/src/main
