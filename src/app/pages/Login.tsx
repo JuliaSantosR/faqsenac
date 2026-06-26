@@ -10,6 +10,9 @@ interface LocationState {
   from?: string;
 }
 
+const adminLoginPlaceholder = import.meta.env.VITE_ADMIN_LOGIN ?? 'admin@instituicao.local';
+const adminPasswordPlaceholder = import.meta.env.VITE_ADMIN_PASSWORD ?? 'admin123';
+
 export function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -80,7 +83,7 @@ export function Login() {
                 onChange={(event) =>
                   setFormData((current) => ({ ...current, login: event.target.value }))
                 }
-                placeholder="admin@instituicao.local"
+                placeholder={adminLoginPlaceholder}
                 autoComplete="username"
                 required
                 className="h-11"
@@ -96,7 +99,7 @@ export function Login() {
                 onChange={(event) =>
                   setFormData((current) => ({ ...current, password: event.target.value }))
                 }
-                placeholder="Digite a senha"
+                placeholder={adminPasswordPlaceholder}
                 autoComplete="current-password"
                 required
                 className="h-11"
@@ -120,14 +123,6 @@ export function Login() {
               Entrar
             </Button>
           </form>
-
-          <div className="mt-6 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-4 text-sm text-gray-600">
-            <p className="mb-1 font-medium text-gray-900">Ambiente de demonstração</p>
-            <p>
-              Configure as variáveis <code>VITE_ADMIN_LOGIN</code> e{' '}
-              <code>VITE_ADMIN_PASSWORD</code> no ambiente local para habilitar o login mock.
-            </p>
-          </div>
 
           <Link
             to="/"
