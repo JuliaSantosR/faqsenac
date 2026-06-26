@@ -41,13 +41,16 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const payload = await parseJsonResponse(response);
   if (!response.ok) {
     const fallback = `Erro ${response.status} ao acessar ${path}.`;
+    const rawMessage =
+      typeof payload === 'object' && payload != null && 'message' in payload
+        ? (payload as { message?: unknown }).message
+        : undefined;
     const message =
-      typeof payload === 'object' &&
-      payload != null &&
-      'message' in payload &&
-      typeof (payload as { message?: unknown }).message === 'string'
-        ? (payload as { message: string }).message
-        : fallback;
+      typeof rawMessage === 'string'
+        ? rawMessage
+        : Array.isArray(rawMessage)
+          ? rawMessage.filter((item): item is string => typeof item === 'string').join(' ')
+          : fallback;
 
     const error = new Error(message) as ApiError;
     error.status = response.status;

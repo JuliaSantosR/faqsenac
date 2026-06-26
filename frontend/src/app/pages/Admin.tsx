@@ -68,6 +68,7 @@ export function Admin() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
     null,
   );
+  const [faqEntryFeedback, setFaqEntryFeedback] = useState<string | null>(null);
   const [isHomeDirty, setIsHomeDirty] = useState(false);
   const previousCategoryIdRef = useRef<string | null>(null);
   const [confirmState, setConfirmState] = useState<{
@@ -119,8 +120,11 @@ export function Admin() {
     }
   }, [selectedCategory]);
 
+  const MIN_FAQ_TEXT_LENGTH = 10;
+
   const resetFAQEntryForm = () => {
     setFaqEntryForm({ id: '', question: '', answer: '', imageUrl: '', videoUrl: '' });
+    setFaqEntryFeedback(null);
   };
 
   const resetAnnouncementForm = () => {
@@ -195,19 +199,31 @@ export function Admin() {
 
   const handleSaveFAQEntry = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFaqEntryFeedback(null);
 
     if (!selectedCategory) {
+      setFaqEntryFeedback('Selecione uma categoria antes de salvar a pergunta.');
       return;
     }
 
-    if (!faqEntryForm.question.trim() || !faqEntryForm.answer.trim()) {
-      showFeedback('error', 'Preencha a pergunta e a resposta.');
+    const question = faqEntryForm.question.trim();
+    const answer = faqEntryForm.answer.trim();
+
+    if (!question || !answer) {
+      setFaqEntryFeedback('Preencha a pergunta e a resposta.');
+      return;
+    }
+
+    if (question.length < MIN_FAQ_TEXT_LENGTH || answer.length < MIN_FAQ_TEXT_LENGTH) {
+      setFaqEntryFeedback(
+        `A pergunta e a resposta devem ter no mínimo ${MIN_FAQ_TEXT_LENGTH} caracteres cada.`,
+      );
       return;
     }
 
     const payload = {
-      question: faqEntryForm.question.trim(),
-      answer: faqEntryForm.answer.trim(),
+      question,
+      answer,
       imageUrl: faqEntryForm.imageUrl.trim(),
       videoUrl: faqEntryForm.videoUrl.trim(),
     };
@@ -223,10 +239,10 @@ export function Admin() {
 
       resetFAQEntryForm();
     } catch (error) {
-      showFeedback(
-        'error',
-        error instanceof Error ? error.message : 'Não foi possível salvar a pergunta.',
-      );
+      const message =
+        error instanceof Error ? error.message : 'Não foi possível salvar a pergunta.';
+      setFaqEntryFeedback(message);
+      showFeedback('error', message);
     }
   };
 
@@ -331,7 +347,8 @@ export function Admin() {
           <p className="text-sm text-gray-600">
             <strong className="text-gray-900">Importante:</strong> este painel usa a mesma fonte de
             dados das páginas públicas e salva as alterações no backend. O conteúdo alterado aqui já
-            reflete em <strong>/</strong>, <strong>/faq</strong> e <strong>/comunicados</strong>.
+            reflete na <strong>página inicial</strong>, em <strong>/faq</strong> e em{' '}
+            <strong>/comunicados</strong>.
           </p>
         </div>
 
@@ -568,9 +585,11 @@ export function Admin() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <form onSubmit={handleSaveFAQEntry} className="space-y-4">
+                      <form onSubmit={handleSaveFAQEntry} noValidate className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="faqQuestion">Pergunta</Label>
+                          <Label htmlFor="faqQuestion">
+                            Pergunta <span className="text-gray-400">(mín. 10 caracteres)</span>
+                          </Label>
                           <Input
                             id="faqQuestion"
                             value={faqEntryForm.question}
@@ -583,7 +602,9 @@ export function Admin() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="faqAnswer">Resposta</Label>
+                          <Label htmlFor="faqAnswer">
+                            Resposta <span className="text-gray-400">(mín. 10 caracteres)</span>
+                          </Label>
                           <Textarea
                             id="faqAnswer"
                             rows={5}
@@ -603,7 +624,7 @@ export function Admin() {
                           </Label>
                           <Input
                             id="faqVideo"
-                            type="url"
+                            type="text"
                             value={faqEntryForm.videoUrl}
                             onChange={(event) =>
                               setFaqEntryForm((current) => ({
@@ -621,7 +642,7 @@ export function Admin() {
                           </Label>
                           <Input
                             id="faqImage"
-                            type="url"
+                            type="text"
                             value={faqEntryForm.imageUrl}
                             onChange={(event) =>
                               setFaqEntryForm((current) => ({
@@ -632,6 +653,11 @@ export function Admin() {
                             placeholder="https://exemplo.com/imagem.jpg"
                           />
                         </div>
+                        {faqEntryFeedback ? (
+                          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                            {faqEntryFeedback}
+                          </p>
+                        ) : null}
                         <div className="flex flex-wrap gap-3">
                           <Button type="submit" className="flex-1 bg-[#FF8C00] text-white hover:bg-[#e67e00]">
                             <Save className="h-4 w-4" />
