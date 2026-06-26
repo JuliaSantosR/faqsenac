@@ -2,11 +2,11 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 const AUTH_STORAGE_KEY = 'school-help-center-auth';
 
-export const ADMIN_CREDENTIALS = {
-  login: 'admin@escola.local',
-  alternateLogin: 'admin',
-  password: 'admin123',
-  name: 'Administrador Escolar',
+const authMockConfig = {
+  login: import.meta.env.VITE_ADMIN_LOGIN?.trim().toLowerCase() ?? '',
+  alternateLogin: import.meta.env.VITE_ADMIN_ALT_LOGIN?.trim().toLowerCase() ?? '',
+  password: import.meta.env.VITE_ADMIN_PASSWORD ?? '',
+  name: import.meta.env.VITE_ADMIN_NAME ?? 'Administrador',
 };
 
 interface AuthUser {
@@ -33,7 +33,12 @@ function readStoredUser(): AuthUser | null {
     return null;
   }
 
-  const rawValue = window.localStorage.getItem(AUTH_STORAGE_KEY);
+  let rawValue: string | null = null;
+  try {
+    rawValue = window.localStorage.getItem(AUTH_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 
   if (!rawValue) {
     return null;
@@ -42,7 +47,11 @@ function readStoredUser(): AuthUser | null {
   try {
     return JSON.parse(rawValue) as AuthUser;
   } catch {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    try {
+      window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+      // noop: storage pode estar indisponivel
+    }
     return null;
   }
 }
@@ -55,25 +64,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (user) {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+    try {
+      if (user) {
+        window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+        return;
+      }
+
+      window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+      // noop: storage indisponivel nao deve quebrar o app
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
-  }, [user]);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_STORAGE_KEY) {
+        setUser(readStoredUser());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       isAuthenticated: Boolean(user),
       user,
       login: (loginValue, password) => {
+        if (!authMockConfig.login || !authMockConfig.password) {
+          return {
+            success: false,
+            error:
+              'Login de demonstracao desabilitado. Configure VITE_ADMIN_LOGIN e VITE_ADMIN_PASSWORD.',
+          };
+        }
+
         const normalizedLogin = loginValue.trim().toLowerCase();
         const isValidLogin =
-          normalizedLogin === ADMIN_CREDENTIALS.login ||
-          normalizedLogin === ADMIN_CREDENTIALS.alternateLogin;
+          normalizedLogin === authMockConfig.login ||
+          (authMockConfig.alternateLogin && normalizedLogin === authMockConfig.alternateLogin);
 
-        if (!isValidLogin || password !== ADMIN_CREDENTIALS.password) {
+        if (!isValidLogin || password !== authMockConfig.password) {
           return {
             success: false,
             error: 'Credenciais inválidas. Verifique o login e a senha informados.',
@@ -81,8 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUser({
-          login: ADMIN_CREDENTIALS.login,
-          name: ADMIN_CREDENTIALS.name,
+          login: authMockConfig.login,
+          name: authMockConfig.name,
         });
 
         return { success: true };

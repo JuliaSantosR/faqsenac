@@ -10,7 +10,7 @@
   Trash2,
   Video,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -20,6 +20,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
+import { ANNOUNCEMENT_PRIORITY_LABELS, formatDateFull } from '../utils/contentHelpers';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 
 export function Admin() {
   const { user, logout } = useAuth();
@@ -54,6 +65,21 @@ export function Admin() {
     description: '',
     details: '',
   });
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
+    null,
+  );
+  const [isHomeDirty, setIsHomeDirty] = useState(false);
+  const previousCategoryIdRef = useRef<string | null>(null);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm?: () => void;
+  }>({
+    open: false,
+    title: '',
+    description: '',
+  });
 
   const selectedCategory = useMemo(
     () => faqCategories.find((category) => category.id === selectedCategoryId) ?? faqCategories[0],
@@ -66,8 +92,10 @@ export function Admin() {
   );
 
   useEffect(() => {
-    setHomeForm(home);
-  }, [home]);
+    if (!isHomeDirty) {
+      setHomeForm(home);
+    }
+  }, [home, isHomeDirty]);
 
   useEffect(() => {
     if (!faqCategories.find((category) => category.id === selectedCategoryId)) {
@@ -84,7 +112,11 @@ export function Admin() {
       label: selectedCategory.label,
       description: selectedCategory.description,
     });
-    resetFAQEntryForm();
+
+    if (previousCategoryIdRef.current !== selectedCategory.id) {
+      resetFAQEntryForm();
+      previousCategoryIdRef.current = selectedCategory.id;
+    }
   }, [selectedCategory]);
 
   const resetFAQEntryForm = () => {
@@ -103,19 +135,32 @@ export function Admin() {
     });
   };
 
-  const formatDate = (value: string) =>
-    new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR');
+  const formatDate = (value: string) => formatDateFull(value);
+
+  const openConfirmDialog = (title: string, description: string, onConfirm: () => void) => {
+    setConfirmState({
+      open: true,
+      title,
+      description,
+      onConfirm,
+    });
+  };
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+  };
 
   const handleSaveHome = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!homeForm.heroTitle.trim() || !homeForm.heroSubtitle.trim()) {
-      window.alert('Preencha pelo menos o título e o subtítulo principais da home.');
+      showFeedback('error', 'Preencha pelo menos o título e o subtítulo principais da home.');
       return;
     }
 
     updateHomeContent(homeForm);
-    window.alert('Conteúdo da home atualizado com sucesso.');
+    setIsHomeDirty(false);
+    showFeedback('success', 'Conteúdo da home atualizado com sucesso.');
   };
 
   const handleSaveCategory = (event: FormEvent<HTMLFormElement>) => {
@@ -126,7 +171,7 @@ export function Admin() {
     }
 
     if (!categoryForm.label.trim() || !categoryForm.description.trim()) {
-      window.alert('Informe o nome e a descrição da categoria.');
+      showFeedback('error', 'Informe o nome e a descrição da categoria.');
       return;
     }
 
@@ -135,7 +180,7 @@ export function Admin() {
       description: categoryForm.description.trim(),
     });
 
-    window.alert('Categoria atualizada com sucesso.');
+    showFeedback('success', 'Categoria atualizada com sucesso.');
   };
 
   const handleSaveFAQEntry = (event: FormEvent<HTMLFormElement>) => {
@@ -146,7 +191,7 @@ export function Admin() {
     }
 
     if (!faqEntryForm.question.trim() || !faqEntryForm.answer.trim()) {
-      window.alert('Preencha a pergunta e a resposta.');
+      showFeedback('error', 'Preencha a pergunta e a resposta.');
       return;
     }
 
@@ -159,10 +204,10 @@ export function Admin() {
 
     if (faqEntryForm.id) {
       updateFAQEntry(selectedCategory.id, faqEntryForm.id, payload);
-      window.alert('Pergunta atualizada com sucesso.');
+      showFeedback('success', 'Pergunta atualizada com sucesso.');
     } else {
       createFAQEntry(selectedCategory.id, payload);
-      window.alert('Pergunta adicionada com sucesso.');
+      showFeedback('success', 'Pergunta adicionada com sucesso.');
     }
 
     resetFAQEntryForm();
@@ -178,7 +223,7 @@ export function Admin() {
       !announcementForm.description.trim() ||
       !announcementForm.details.trim()
     ) {
-      window.alert('Preencha todos os campos do comunicado.');
+      showFeedback('error', 'Preencha todos os campos do comunicado.');
       return;
     }
 
@@ -193,18 +238,18 @@ export function Admin() {
 
     if (announcementForm.id) {
       updateAnnouncement({ id: announcementForm.id, ...payload });
-      window.alert('Comunicado atualizado com sucesso.');
+      showFeedback('success', 'Comunicado atualizado com sucesso.');
     } else {
       createAnnouncement(payload);
-      window.alert('Comunicado publicado com sucesso.');
+      showFeedback('success', 'Comunicado publicado com sucesso.');
     }
 
     resetAnnouncementForm();
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-      <section className="bg-[#004581] px-4 pt-12 pb-28 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-brand-surface">
+      <section className="bg-brand-primary px-4 pt-12 pb-28 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="text-center md:text-left">
@@ -232,6 +277,19 @@ export function Admin() {
       </section>
 
       <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:px-8">
+        {feedback ? (
+          <div
+            role="alert"
+            aria-live="polite"
+            className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
+              feedback.type === 'success'
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : 'border-red-200 bg-red-50 text-red-700'
+            }`}
+          >
+            {feedback.message}
+          </div>
+        ) : null}
         <div className="relative z-10 -mt-16 mb-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-md">
             <p className="mb-1 text-sm text-gray-500">Página inicial</p>
@@ -299,7 +357,10 @@ export function Admin() {
                       id="heroTitle"
                       value={homeForm.heroTitle}
                       onChange={(event) =>
-                        setHomeForm((current) => ({ ...current, heroTitle: event.target.value }))
+                        setHomeForm((current) => {
+                          setIsHomeDirty(true);
+                          return { ...current, heroTitle: event.target.value };
+                        })
                       }
                     />
                   </div>
@@ -309,10 +370,13 @@ export function Admin() {
                       id="faqSectionTitle"
                       value={homeForm.faqSectionTitle}
                       onChange={(event) =>
-                        setHomeForm((current) => ({
-                          ...current,
-                          faqSectionTitle: event.target.value,
-                        }))
+                        setHomeForm((current) => {
+                          setIsHomeDirty(true);
+                          return {
+                            ...current,
+                            faqSectionTitle: event.target.value,
+                          };
+                        })
                       }
                     />
                   </div>
@@ -323,7 +387,10 @@ export function Admin() {
                       rows={3}
                       value={homeForm.heroSubtitle}
                       onChange={(event) =>
-                        setHomeForm((current) => ({ ...current, heroSubtitle: event.target.value }))
+                        setHomeForm((current) => {
+                          setIsHomeDirty(true);
+                          return { ...current, heroSubtitle: event.target.value };
+                        })
                       }
                     />
                   </div>
@@ -333,10 +400,13 @@ export function Admin() {
                       id="featuredTitle"
                       value={homeForm.featuredTitle}
                       onChange={(event) =>
-                        setHomeForm((current) => ({
-                          ...current,
-                          featuredTitle: event.target.value,
-                        }))
+                        setHomeForm((current) => {
+                          setIsHomeDirty(true);
+                          return {
+                            ...current,
+                            featuredTitle: event.target.value,
+                          };
+                        })
                       }
                     />
                   </div>
@@ -346,10 +416,13 @@ export function Admin() {
                       id="announcementsSectionTitle"
                       value={homeForm.announcementsSectionTitle}
                       onChange={(event) =>
-                        setHomeForm((current) => ({
-                          ...current,
-                          announcementsSectionTitle: event.target.value,
-                        }))
+                        setHomeForm((current) => {
+                          setIsHomeDirty(true);
+                          return {
+                            ...current,
+                            announcementsSectionTitle: event.target.value,
+                          };
+                        })
                       }
                     />
                   </div>
@@ -360,10 +433,13 @@ export function Admin() {
                       rows={4}
                       value={homeForm.featuredDescription}
                       onChange={(event) =>
-                        setHomeForm((current) => ({
-                          ...current,
-                          featuredDescription: event.target.value,
-                        }))
+                        setHomeForm((current) => {
+                          setIsHomeDirty(true);
+                          return {
+                            ...current,
+                            featuredDescription: event.target.value,
+                          };
+                        })
                       }
                     />
                   </div>
@@ -569,6 +645,7 @@ export function Admin() {
                                     type="button"
                                     size="sm"
                                     variant="outline"
+                                    aria-label={`Editar pergunta: ${item.question}`}
                                     onClick={() =>
                                       setFaqEntryForm({
                                         id: item.id,
@@ -585,13 +662,17 @@ export function Admin() {
                                     type="button"
                                     size="sm"
                                     variant="outline"
+                                    aria-label={`Excluir pergunta: ${item.question}`}
                                     onClick={() => {
-                                      if (
-                                        selectedCategory &&
-                                        window.confirm('Deseja excluir esta pergunta?')
-                                      ) {
-                                        deleteFAQEntry(selectedCategory.id, item.id);
+                                      if (!selectedCategory) {
+                                        return;
                                       }
+
+                                      openConfirmDialog(
+                                        'Excluir pergunta',
+                                        'Esta ação remove a pergunta da categoria e não pode ser desfeita.',
+                                        () => deleteFAQEntry(selectedCategory.id, item.id),
+                                      );
                                     }}
                                   >
                                     <Trash2 className="h-4 w-4 text-red-600" />
@@ -671,9 +752,11 @@ export function Admin() {
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="high">Urgente</SelectItem>
-                            <SelectItem value="medium">Importante</SelectItem>
-                            <SelectItem value="low">Informativo</SelectItem>
+                            <SelectItem value="high">{ANNOUNCEMENT_PRIORITY_LABELS.high}</SelectItem>
+                            <SelectItem value="medium">
+                              {ANNOUNCEMENT_PRIORITY_LABELS.medium}
+                            </SelectItem>
+                            <SelectItem value="low">{ANNOUNCEMENT_PRIORITY_LABELS.low}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -760,6 +843,7 @@ export function Admin() {
                                 type="button"
                                 size="sm"
                                 variant="outline"
+                                aria-label={`Editar comunicado: ${announcement.title}`}
                                 onClick={() =>
                                   setAnnouncementForm({
                                     id: announcement.id,
@@ -778,10 +862,13 @@ export function Admin() {
                                 type="button"
                                 size="sm"
                                 variant="outline"
+                                aria-label={`Excluir comunicado: ${announcement.title}`}
                                 onClick={() => {
-                                  if (window.confirm('Deseja excluir este comunicado?')) {
-                                    deleteAnnouncement(announcement.id);
-                                  }
+                                  openConfirmDialog(
+                                    'Excluir comunicado',
+                                    'Esta ação remove o comunicado publicado e não pode ser desfeita.',
+                                    () => deleteAnnouncement(announcement.id),
+                                  );
                                 }}
                               >
                                 <Trash2 className="h-4 w-4 text-red-600" />
@@ -802,6 +889,28 @@ export function Admin() {
             </div>
           </TabsContent>
         </Tabs>
+          <AlertDialog
+            open={confirmState.open}
+            onOpenChange={(open) => setConfirmState((current) => ({ ...current, open }))}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{confirmState.title}</AlertDialogTitle>
+                <AlertDialogDescription>{confirmState.description}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    confirmState.onConfirm?.();
+                    setConfirmState((current) => ({ ...current, open: false, onConfirm: undefined }));
+                  }}
+                >
+                  Confirmar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>

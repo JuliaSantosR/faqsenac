@@ -12,8 +12,8 @@ export function Comunicados() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-      <section className="bg-[#004581] px-4 py-14 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-brand-surface">
+      <section className="bg-brand-primary px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-xs font-semibold tracking-widest uppercase">
             <Megaphone className="h-4 w-4" />

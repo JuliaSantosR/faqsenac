@@ -67,7 +67,12 @@ function readStoredContent(): SiteContent {
     return defaultSiteContent;
   }
 
-  const rawValue = window.localStorage.getItem(CONTENT_STORAGE_KEY);
+  let rawValue: string | null = null;
+  try {
+    rawValue = window.localStorage.getItem(CONTENT_STORAGE_KEY);
+  } catch {
+    return defaultSiteContent;
+  }
 
   if (!rawValue) {
     return defaultSiteContent;
@@ -76,7 +81,11 @@ function readStoredContent(): SiteContent {
   try {
     return normalizeContent(JSON.parse(rawValue) as SiteContent);
   } catch {
-    window.localStorage.removeItem(CONTENT_STORAGE_KEY);
+    try {
+      window.localStorage.removeItem(CONTENT_STORAGE_KEY);
+    } catch {
+      // noop: storage indisponivel
+    }
     return defaultSiteContent;
   }
 }
@@ -89,8 +98,27 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    window.localStorage.setItem(CONTENT_STORAGE_KEY, JSON.stringify(content));
+    try {
+      window.localStorage.setItem(CONTENT_STORAGE_KEY, JSON.stringify(content));
+    } catch {
+      // noop: evitar quebrar o app em ambientes sem storage
+    }
   }, [content]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === CONTENT_STORAGE_KEY) {
+        setContent(readStoredContent());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const value = useMemo<ContentContextValue>(
     () => ({

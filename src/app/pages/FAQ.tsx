@@ -12,6 +12,25 @@ import {
 import { useContent } from '../context/ContentContext';
 import type { FAQCategory } from '../types/content';
 
+const ALLOWED_VIDEO_HOSTS = new Set(['www.youtube.com', 'youtube.com', 'youtu.be', 'player.vimeo.com']);
+
+function getSafeVideoUrl(value: string) {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmedValue);
+    if (url.protocol !== 'https:' || !ALLOWED_VIDEO_HOSTS.has(url.hostname.toLowerCase())) {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function FAQ() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('busca') ?? '';
@@ -61,11 +80,6 @@ export function FAQ() {
     }));
   }, [faqCategories, searchQuery]);
 
-  const resultsCount = filteredCategories.reduce(
-    (total, category) => total + category.items.length,
-    0,
-  );
-
   const hasActiveSearch = searchQuery.trim().length > 0;
 
   const activeCategoryData = useMemo(() => {
@@ -76,14 +90,19 @@ export function FAQ() {
       return undefined;
     }
 
-    if (!hasActiveSearch || resultsCount === 0) {
+    if (!hasActiveSearch) {
       return baseCategory;
     }
 
     return (
-      filteredCategories.find((category) => category.id === activeCategory) ?? baseCategory
+      filteredCategories.find((category) => category.id === activeCategory) ?? {
+        ...baseCategory,
+        items: [],
+      }
     );
-  }, [activeCategory, faqCategories, filteredCategories, hasActiveSearch, resultsCount]);
+  }, [activeCategory, faqCategories, filteredCategories, hasActiveSearch]);
+
+  const activeCategoryResultsCount = activeCategoryData?.items.length ?? 0;
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -111,8 +130,8 @@ export function FAQ() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-      <section className="bg-[#004581] px-4 pt-12 pb-20 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-brand-surface">
+      <section className="bg-brand-primary px-4 pt-12 pb-20 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="mb-4 text-3xl font-bold md:text-4xl">Perguntas Frequentes</h1>
           <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-blue-100">
@@ -127,9 +146,10 @@ export function FAQ() {
             placeholder="Buscar: renda, edital, documentos..."
           />
 
-          {searchQuery.trim() ? (
+          {hasActiveSearch ? (
             <p className="mt-4 text-sm text-blue-200">
-              {resultsCount} resultado(s) encontrados para &ldquo;{searchQuery.trim()}&rdquo;.
+              {activeCategoryResultsCount} resultado(s) encontrados na categoria ativa para
+              &ldquo;{searchQuery.trim()}&rdquo;.
             </p>
           ) : null}
         </div>
@@ -139,6 +159,16 @@ export function FAQ() {
             categories={faqCategories}
             activeCategoryId={activeCategory}
             onSelect={handleCategorySelect}
+            getItemCount={(category) => {
+              if (!hasActiveSearch) {
+                return category.items.length;
+              }
+
+              return (
+                filteredCategories.find((filteredCategory) => filteredCategory.id === category.id)
+                  ?.items.length ?? 0
+              );
+            }}
           />
         </div>
       </section>
@@ -172,15 +202,25 @@ export function FAQ() {
                       ) : null}
 
                       {item.videoUrl ? (
+                        (() => {
+                          const safeVideoUrl = getSafeVideoUrl(item.videoUrl);
+                          if (!safeVideoUrl) {
+                            return null;
+                          }
+
+                          return (
                         <div className="aspect-video overflow-hidden rounded-lg bg-gray-100">
                           <iframe
-                            src={item.videoUrl}
+                            src={safeVideoUrl}
                             title="Vídeo explicativo"
                             className="h-full w-full"
+                            sandbox="allow-scripts allow-same-origin allow-presentation"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                           />
                         </div>
+                          );
+                        })()
                       ) : null}
                     </AccordionContent>
                   </AccordionItem>

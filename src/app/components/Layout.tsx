@@ -11,9 +11,13 @@ export function Layout() {
       return;
     }
 
-    const target = document.querySelector(location.hash);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+    try {
+      const target = document.querySelector(location.hash);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch {
+      // noop: hash invalida nao deve quebrar o app
     }
   }, [location]);
 

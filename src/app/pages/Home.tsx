@@ -25,8 +25,8 @@ export function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-      <section className="bg-[#004581] px-4 pt-12 pb-28 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-brand-surface">
+      <section className="bg-brand-primary px-4 pt-12 pb-28 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="mb-4 text-3xl font-bold md:text-5xl">{home.heroTitle}</h1>
           <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-blue-100 md:text-lg">

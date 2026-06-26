@@ -1,5 +1,5 @@
 ﻿import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { INSTITUTION_NAME, SITE_NAME } from '../constants/site';
 import { useAuth } from '../context/AuthContext';
@@ -24,12 +24,23 @@ export function Header() {
     return location.pathname === path;
   };
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link to="/" className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-90">
-            <span className="rounded-lg bg-[#004581] px-3 py-1.5 text-sm font-bold text-white">
+            <span className="bg-brand-primary rounded-lg px-3 py-1.5 text-sm font-bold text-white">
               {SITE_NAME}
             </span>
             <span className="hidden h-5 w-px bg-gray-200 sm:block" aria-hidden="true" />
@@ -37,15 +48,15 @@ export function Header() {
           </Link>
 
           <div className="hidden items-center gap-6 md:flex">
-            <nav className="flex items-center gap-6">
+            <nav className="flex items-center gap-6" aria-label="Navegação principal">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={`text-sm transition-colors ${
                     isActive(item.path)
-                      ? 'font-bold text-[#004581] underline decoration-[#004581] decoration-2 underline-offset-4'
-                      : 'text-gray-600 hover:text-[#004581]'
+                      ? 'text-brand-primary underline decoration-brand-primary font-bold decoration-2 underline-offset-4'
+                      : 'text-gray-600 hover:text-brand-primary'
                   }`}
                 >
                   {item.label}
@@ -60,8 +71,8 @@ export function Header() {
                 variant={isAuthenticated ? 'default' : 'outline'}
                 className={
                   isAuthenticated
-                    ? 'bg-[#004581] hover:bg-[#003666]'
-                    : 'border-[#004581] text-[#004581] hover:bg-blue-50'
+                    ? 'bg-brand-primary hover:bg-brand-primary-hover'
+                    : 'border-brand-primary text-brand-primary hover:bg-blue-50'
                 }
               >
                 <Link to={isAuthenticated ? '/admin' : '/login'}>
@@ -81,6 +92,8 @@ export function Header() {
             className="rounded-lg p-2 hover:bg-gray-100 md:hidden"
             onClick={() => setMobileMenuOpen((current) => !current)}
             aria-label="Menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation-menu"
           >
             {mobileMenuOpen ? (
               <X className="h-6 w-6 text-gray-700" />
@@ -91,7 +104,11 @@ export function Header() {
         </div>
 
         {mobileMenuOpen ? (
-          <nav className="border-t py-4 md:hidden">
+          <nav
+            id="mobile-navigation-menu"
+            className="border-t py-4 md:hidden"
+            aria-label="Navegação principal mobile"
+          >
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.path}
@@ -99,7 +116,7 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-3 text-sm ${
                   isActive(item.path)
-                    ? 'font-bold text-[#004581]'
+                    ? 'text-brand-primary font-bold'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
@@ -114,8 +131,8 @@ export function Header() {
                 variant={isAuthenticated ? 'default' : 'outline'}
                 className={
                   isAuthenticated
-                    ? 'bg-[#004581] hover:bg-[#003666]'
-                    : 'border-[#004581] text-[#004581] hover:bg-blue-50'
+                    ? 'bg-brand-primary hover:bg-brand-primary-hover'
+                    : 'border-brand-primary text-brand-primary hover:bg-blue-50'
                 }
               >
                 <Link

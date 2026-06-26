@@ -1,22 +1,33 @@
 import { createBrowserRouter } from 'react-router';
 import { Layout } from './components/Layout';
-import { ProtectedAdminPage } from './components/ProtectedAdminPage';
-import { Home } from './pages/Home';
-import { FAQ } from './pages/FAQ';
-import { Comunicados } from './pages/Comunicados';
-import { Login } from './pages/Login';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     Component: Layout,
     children: [
-      { index: true, Component: Home },
-      { path: 'faq', Component: FAQ },
-      { path: 'comunicados', Component: Comunicados },
-      
-      { path: 'login', Component: Login },
-      { path: 'admin', Component: ProtectedAdminPage },
+      {
+        index: true,
+        lazy: async () => ({ Component: (await import('./pages/Home')).Home }),
+      },
+      {
+        path: 'faq',
+        lazy: async () => ({ Component: (await import('./pages/FAQ')).FAQ }),
+      },
+      {
+        path: 'comunicados',
+        lazy: async () => ({ Component: (await import('./pages/Comunicados')).Comunicados }),
+      },
+      {
+        path: 'login',
+        lazy: async () => ({ Component: (await import('./pages/Login')).Login }),
+      },
+      {
+        path: 'admin',
+        lazy: async () => ({
+          Component: (await import('./components/ProtectedAdminPage')).ProtectedAdminPage,
+        }),
+      },
     ],
   },
 ]);
