@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  role     Role   @default(USER)
+
+  @@map("users")
+}
+
+model FAQCategory {
+  id          String     @id @default(uuid())
+  label       String     @unique
+  description String
+  entries     FAQEntry[]
+
+  @@map("faq_categories")
+}
+
+model FAQEntry {
+  id         String      @id @default(uuid())
+  question   String
+  answer     String
+  category   FAQCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  @@map("faq_entries")
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+
+  @@map("announcements")
+}

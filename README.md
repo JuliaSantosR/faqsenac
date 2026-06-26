@@ -1,11 +1,34 @@
+# UniFAQ
 
-  # Prototipo de FAQ Escolar
+Plataforma de perguntas frequentes da Faculdade Senac Palhoça para candidatos do Programa Senac de Gratuidade (PSG).
 
-  This is a code bundle for Prototipo de FAQ Escolar. The original project is available at https://www.figma.com/design/rDPT8cHbtmhI1y58E21ZfH/Prototipo-de-FAQ-Escolar.
+## Estrutura do repositório
 
-  ## Running the code
+```
+faqsenac/
+├── frontend/     # React 18 + Vite + TypeScript (SPA)
+├── backend/      # NestJS + Prisma + PostgreSQL (API REST)
+├── guidelines/   # Documentação técnica do projeto
+└── fixtures/     # Materiais de referência acadêmica
+```
 
-  Run `npm i` to install the dependencies.
+## Frontend
 
-  Run `npm run dev` to start the development server.
-  
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+A aplicação web sobe em `http://localhost:5173`.
+
+## Backend
+
+```bash
+cd backend
+docker compose up --build
+```
+
+A API REST sobe em `http://localhost:3000`.
+
+Consulte [backend/README.md](backend/README.md) para endpoints, credenciais do seed e exemplos de uso.

@@ -21,12 +21,12 @@ O sistema orienta sobre triagem, editais, documentação (autodeclaração de re
 | Camada | Estado atual | Alvo |
 |--------|--------------|------|
 | Front-end | React 18 + Vite + TypeScript, funcional | Manter |
-| Roteamento | React Router 7 (`src/app/routes.ts`) | Manter |
-| UI | Tailwind 4 + Radix/shadcn (`src/app/components/ui/`) | Manter padrão existente |
+| Roteamento | React Router 7 (`frontend/src/app/routes.ts`) | Manter |
+| UI | Tailwind 4 + Radix/shadcn (`frontend/src/app/components/ui/`) | Manter padrão existente |
 | Dados | `localStorage` via contexts | Migrar para API NestJS |
 | Auth | Login mock em `AuthContext` (admin hardcoded) | JWT + perfis (candidato / admin) |
-| Back-end | **Ainda não existe no repo** | NestJS + TypeScript + REST |
-| Infra | **Ainda não existe no repo** | Docker Compose (front, back, DB) |
+| Back-end | **NestJS em `backend/`** | Manter e integrar com o front |
+| Infra | **Docker Compose em `backend/`** | Estender para incluir `frontend` |
 
 Ao implementar features novas, **prefira não acoplar mais lógica ao localStorage** se a feature claramente pertence ao back-end (auth real, persistência, busca server-side).
 
@@ -35,23 +35,30 @@ Ao implementar features novas, **prefira não acoplar mais lógica ao localStora
 ## 3. Estrutura do repositório
 
 ```
-src/
-├── main.tsx                 # AuthProvider + ContentProvider
-├── app/
-│   ├── App.tsx              # RouterProvider
-│   ├── routes.ts            # Rotas públicas e /admin protegida
-│   ├── types/content.ts     # Tipos de domínio (FAQ, avisos, home)
-│   ├── data/defaultContent.ts   # Seed inicial (⚠ legado escolar — migrar para PSG)
-│   ├── context/
-│   │   ├── AuthContext.tsx      # Auth mock (localStorage)
-│   │   └── ContentContext.tsx   # CRUD de conteúdo (localStorage)
-│   ├── pages/               # Home, FAQ, Comunicados, Login, Admin
-│   └── components/          # Layout, Header, Footer, SearchBar, ui/*
-guidelines/Guidelines.md     # Este arquivo
-fixtures/                    # Documentação acadêmica (referência de negócio)
+faqsenac/
+├── frontend/
+│   ├── src/
+│   │   ├── main.tsx                 # AuthProvider + ContentProvider
+│   │   └── app/
+│   │       ├── App.tsx              # RouterProvider
+│   │       ├── routes.ts            # Rotas públicas e /admin protegida
+│   │       ├── types/content.ts     # Tipos de domínio (FAQ, avisos, home)
+│   │       ├── data/defaultContent.ts   # Seed inicial (⚠ legado escolar — migrar para PSG)
+│   │       ├── context/
+│   │       │   ├── AuthContext.tsx      # Auth mock (localStorage)
+│   │       │   └── ContentContext.tsx   # CRUD de conteúdo (localStorage)
+│   │       ├── pages/               # Home, FAQ, Comunicados, Login, Admin
+│   │       └── components/          # Layout, Header, Footer, SearchBar, ui/*
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/                         # NestJS + Prisma + PostgreSQL
+├── guidelines/Guidelines.md         # Este arquivo
+└── fixtures/                        # Documentação acadêmica (referência de negócio)
 ```
 
-**Comandos:** `npm i` · `npm run dev` · `npm run build`
+**Comandos (frontend):** `cd frontend && npm i` · `npm run dev` · `npm run build`
+
+**Comandos (backend):** `cd backend && docker compose up --build`
 
 ---
 
@@ -69,7 +76,7 @@ fixtures/                    # Documentação acadêmica (referência de negóci
 
 ---
 
-## 5. Modelo de dados (`src/app/types/content.ts`)
+## 5. Modelo de dados (`frontend/src/app/types/content.ts`)
 
 ```ts
 SiteContent {
@@ -159,7 +166,7 @@ Remover ou não expandir referências legadas: "Portal do Aluno", "Área do Resp
 
 - **Mobile-first**, responsivo (Tailwind breakpoints `sm`, `md`, `lg`).
 - Cores institucionais Senac: **azul** e **laranja** (RNF05). Home usa gradiente `from-blue-600 to-blue-800`; alinhar acentos laranja onde fizer sentido.
-- Reutilizar componentes em `src/app/components/ui/` (shadcn/Radix) — não introduzir outra lib de componentes sem necessidade.
+- Reutilizar componentes em `frontend/src/app/components/ui/` (shadcn/Radix) — não introduzir outra lib de componentes sem necessidade.
 - Ícones: `lucide-react`.
 - Textos voltados a **candidatos de baixa renda**: linguagem simples, objetiva, sem jargão burocrático desnecessário.
 
@@ -195,7 +202,7 @@ Endpoints REST consumidos pelo React; validação de regras PSG no server-side.
 
 ## 13. Convenções de código
 
-- TypeScript estrito; tipos de domínio em `src/app/types/`.
+- TypeScript estrito; tipos de domínio em `frontend/src/app/types/`.
 - Componentes de página em `pages/`, reutilizáveis em `components/`.
 - Estado global só via contexts (ou futuro React Query + API); evitar prop drilling desnecessário.
 - Manter diffs focados; não refatorar arquivos não relacionados à tarefa.
@@ -211,7 +218,7 @@ Endpoints REST consumidos pelo React; validação de regras PSG no server-side.
 3. `Home.tsx` — SearchBar removida/não renderizada no hero (busca só em `/faq`).
 4. `Footer.tsx` — placeholders genéricos; links escolares; sem WhatsApp.
 5. Chaves `localStorage` com prefixo `school-help-center-*` (legado do protótipo Figma).
-6. Back-end NestJS e Docker ainda não existem no repositório.
+6. Back-end NestJS em `backend/`; Docker Compose disponível para a API.
 
 Priorize correções que alinham **domínio PSG** e **preparam migração para API** quando a tarefa pedir.
 
