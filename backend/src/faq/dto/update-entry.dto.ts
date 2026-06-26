@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsUrl, IsUUID, MinLength, ValidateIf } from 'class-validator';
 
 export class UpdateEntryDto {
   @IsOptional()
@@ -14,4 +14,16 @@ export class UpdateEntryDto {
   @IsOptional()
   @IsUUID('4', { message: 'O categoryId deve ser um UUID válido.' })
   categoryId?: string;
+
+  @IsOptional()
+  @IsString()
+  @ValidateIf((_, value) => typeof value === 'string' && value.trim() !== '')
+  @IsUrl({}, { message: 'A URL da imagem deve ser válida.' })
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @ValidateIf((_, value) => typeof value === 'string' && value.trim() !== '')
+  @IsUrl({}, { message: 'A URL do vídeo deve ser válida.' })
+  videoUrl?: string;
 }

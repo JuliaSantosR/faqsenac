@@ -34,6 +34,8 @@ model FAQEntry {
   id         String      @id @default(uuid())
   question   String
   answer     String
+  imageUrl   String      @default("")
+  videoUrl   String      @default("")
   category   FAQCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId String
 

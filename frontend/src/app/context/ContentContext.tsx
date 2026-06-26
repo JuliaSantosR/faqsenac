@@ -64,6 +64,8 @@ interface ApiEntry {
   question: string;
   answer: string;
   categoryId: string;
+  imageUrl?: string;
+  videoUrl?: string;
 }
 
 interface ApiAnnouncement {
@@ -112,8 +114,8 @@ function toSiteContent(
         id: entry.id,
         question: entry.question,
         answer: entry.answer,
-        imageUrl: '',
-        videoUrl: '',
+        imageUrl: entry.imageUrl ?? '',
+        videoUrl: entry.videoUrl ?? '',
       }));
 
     return {
@@ -231,6 +233,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
             question: entry.question.trim(),
             answer: entry.answer.trim(),
             categoryId,
+            imageUrl: entry.imageUrl.trim(),
+            videoUrl: entry.videoUrl.trim(),
           }),
         });
 
@@ -247,8 +251,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
                         id: createdEntry.id,
                         question: createdEntry.question,
                         answer: createdEntry.answer,
-                        imageUrl: '',
-                        videoUrl: '',
+                        imageUrl: createdEntry.imageUrl ?? '',
+                        videoUrl: createdEntry.videoUrl ?? '',
                       },
                     ],
                   }
@@ -269,6 +273,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
             question: entry.question.trim(),
             answer: entry.answer.trim(),
             categoryId,
+            imageUrl: entry.imageUrl.trim(),
+            videoUrl: entry.videoUrl.trim(),
           }),
         });
 
@@ -285,6 +291,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
                             ...item,
                             question: updatedEntry.question,
                             answer: updatedEntry.answer,
+                            imageUrl: updatedEntry.imageUrl ?? '',
+                            videoUrl: updatedEntry.videoUrl ?? '',
                           }
                         : item,
                     )

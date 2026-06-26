@@ -11,25 +11,7 @@ import {
 } from '../components/ui/accordion';
 import { useContent } from '../context/ContentContext';
 import type { FAQCategory } from '../types/content';
-
-const ALLOWED_VIDEO_HOSTS = new Set(['www.youtube.com', 'youtube.com', 'youtu.be', 'player.vimeo.com']);
-
-function getSafeVideoUrl(value: string) {
-  const trimmedValue = value.trim();
-  if (!trimmedValue) {
-    return null;
-  }
-
-  try {
-    const url = new URL(trimmedValue);
-    if (url.protocol !== 'https:' || !ALLOWED_VIDEO_HOSTS.has(url.hostname.toLowerCase())) {
-      return null;
-    }
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
+import { getSafeVideoUrl } from '../utils/faqMediaHelpers';
 
 export function FAQ() {
   const [searchParams, setSearchParams] = useSearchParams();

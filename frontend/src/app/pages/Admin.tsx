@@ -21,6 +21,7 @@ import { Textarea } from '../components/ui/textarea';
 import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
 import { ANNOUNCEMENT_PRIORITY_LABELS, formatDateFull } from '../utils/contentHelpers';
+import { getSafeVideoUrl, isValidImageUrl, normalizeVideoUrl } from '../utils/faqMediaHelpers';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -221,11 +222,27 @@ export function Admin() {
       return;
     }
 
+    const imageUrl = faqEntryForm.imageUrl.trim();
+    const videoUrl = faqEntryForm.videoUrl.trim();
+
+    if (!isValidImageUrl(imageUrl)) {
+      setFaqEntryFeedback('Informe uma URL de imagem válida (http ou https).');
+      return;
+    }
+
+    const normalizedVideoUrl = normalizeVideoUrl(videoUrl);
+    if (videoUrl && !getSafeVideoUrl(normalizedVideoUrl)) {
+      setFaqEntryFeedback(
+        'Informe uma URL de vídeo do YouTube ou Vimeo (ex.: https://www.youtube.com/watch?v=...).',
+      );
+      return;
+    }
+
     const payload = {
       question,
       answer,
-      imageUrl: faqEntryForm.imageUrl.trim(),
-      videoUrl: faqEntryForm.videoUrl.trim(),
+      imageUrl,
+      videoUrl: normalizedVideoUrl,
     };
 
     try {
@@ -620,7 +637,7 @@ export function Admin() {
                         <div className="space-y-2">
                           <Label htmlFor="faqVideo" className="flex items-center gap-2">
                             <Video className="h-4 w-4" />
-                            URL do vídeo
+                            URL do vídeo <span className="text-gray-400">(YouTube ou Vimeo)</span>
                           </Label>
                           <Input
                             id="faqVideo"
@@ -632,7 +649,7 @@ export function Admin() {
                                 videoUrl: event.target.value,
                               }))
                             }
-                            placeholder="https://www.youtube.com/embed/..."
+                            placeholder="https://www.youtube.com/watch?v=..."
                           />
                         </div>
                         <div className="space-y-2">
