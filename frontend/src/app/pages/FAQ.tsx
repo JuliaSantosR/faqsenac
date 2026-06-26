@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { CategoryPills } from '../components/CategoryPills';
 import { HeroSearch } from '../components/HeroSearch';
@@ -86,21 +86,24 @@ export function FAQ() {
 
   const activeCategoryResultsCount = activeCategoryData?.items.length ?? 0;
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    const trimmedQuery = query.trim();
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      const trimmedQuery = query.trim();
 
-    if (!trimmedQuery) {
-      setSearchParams(activeCategory ? { categoria: activeCategory } : {});
-      return;
-    }
+      if (!trimmedQuery) {
+        setSearchParams(activeCategory ? { categoria: activeCategory } : {});
+        return;
+      }
 
-    const params: Record<string, string> = { busca: trimmedQuery };
-    if (activeCategory) {
-      params.categoria = activeCategory;
-    }
-    setSearchParams(params);
-  };
+      const params: Record<string, string> = { busca: trimmedQuery };
+      if (activeCategory) {
+        params.categoria = activeCategory;
+      }
+      setSearchParams(params);
+    },
+    [activeCategory, setSearchParams],
+  );
 
   const handleCategorySelect = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -122,9 +125,9 @@ export function FAQ() {
           </p>
 
           <HeroSearch
-            key={initialQuery}
             defaultValue={initialQuery}
             onSearch={handleSearch}
+            autoSearch
             placeholder="Buscar: renda, edital, documentos..."
           />
 

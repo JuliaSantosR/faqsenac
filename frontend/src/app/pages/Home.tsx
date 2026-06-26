@@ -3,10 +3,8 @@ import { AnnouncementFeed } from '../components/AnnouncementFeed';
 import { CategoryCards } from '../components/CategoryCards';
 import { HeroSearch } from '../components/HeroSearch';
 import { SupportWidget } from '../components/SupportWidget';
+import { HOME_FEATURED_IMAGE } from '../constants/site';
 import { useContent } from '../context/ContentContext';
-
-const CLASSROOM_IMAGE =
-  'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=400&fit=crop';
 
 export function Home() {
   const navigate = useNavigate();
@@ -53,8 +51,8 @@ export function Home() {
           <div className="space-y-6">
             <SupportWidget />
             <img
-              src={CLASSROOM_IMAGE}
-              alt="Professora interagindo com alunos em sala de aula"
+              src={HOME_FEATURED_IMAGE}
+              alt="Estudante em ambiente de aprendizagem do Senac"
               className="w-full rounded-2xl object-cover shadow-sm"
             />
           </div>
