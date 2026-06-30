@@ -1,7 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { apiRequest } from '../services/api';
 
 const AUTH_STORAGE_KEY = 'unifaq-auth';
+
+const LOCAL_ADMIN = {
+  email: 'admin@senac.local',
+  password: 'admin123',
+  id: 'local-admin',
+  role: 'ADMIN',
+} as const;
 
 interface AuthUser {
   id: string;
@@ -62,7 +68,7 @@ function readStoredAuthState(): StoredAuthState | null {
     try {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch {
-      // noop: storage pode estar indisponivel
+      // noop: storage pode estar indisponível
     }
     return null;
   }
@@ -84,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch {
-      // noop: storage indisponivel nao deve quebrar o app
+      // noop: storage indisponível não deve quebrar o app
     }
   }, [authState]);
 
@@ -114,37 +120,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: 'Informe e-mail e senha.' };
         }
 
-        try {
-          const loginResponse = await apiRequest<{ access_token: string }>('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email: normalizedLogin, password }),
-          });
-
-          const profile = await apiRequest<{
-            id: string;
-            email: string;
-            role: string;
-          }>('/users/me', {
-            token: loginResponse.access_token,
-          });
-
-          const nextState: StoredAuthState = {
-            token: loginResponse.access_token,
-            user: {
-              id: profile.id,
-              email: profile.email,
-              login: profile.email,
-              name: profile.email,
-              role: profile.role,
-            },
-          };
-          setAuthState(nextState);
-
-          return { success: true };
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Não foi possível autenticar.';
-          return { success: false, error: message };
+        if (normalizedLogin !== LOCAL_ADMIN.email || password !== LOCAL_ADMIN.password) {
+          return { success: false, error: 'E-mail ou senha inválidos.' };
         }
+
+        setAuthState({
+          token: 'local',
+          user: {
+            id: LOCAL_ADMIN.id,
+            email: LOCAL_ADMIN.email,
+            login: LOCAL_ADMIN.email,
+            name: 'Administrador',
+            role: LOCAL_ADMIN.role,
+          },
+        });
+
+        return { success: true };
       },
       logout: () => setAuthState(null),
     }),

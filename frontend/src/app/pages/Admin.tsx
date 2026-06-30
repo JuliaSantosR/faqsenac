@@ -363,8 +363,9 @@ export function Admin() {
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#004581]" />
           <p className="text-sm text-gray-600">
             <strong className="text-gray-900">Importante:</strong> este painel usa a mesma fonte de
-            dados das páginas públicas e salva as alterações no backend. O conteúdo alterado aqui já
-            reflete na <strong>página inicial</strong>, em <strong>/faq</strong> e em{' '}
+            dados das páginas públicas e salva as alterações no{' '}
+            <strong>localStorage do navegador</strong>. O conteúdo alterado aqui já reflete na{' '}
+            <strong>página inicial</strong>, em <strong>/faq</strong> e em{' '}
             <strong>/comunicados</strong>.
           </p>
         </div>

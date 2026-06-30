@@ -4,6 +4,8 @@ Plataforma de perguntas frequentes da **Faculdade Senac Palhoça** para candidat
 
 O sistema reúne FAQ por categorias, comunicados oficiais e um painel administrativo para editar o conteúdo exibido nas páginas públicas.
 
+> **Branch `local`:** versão standalone que roda só com o frontend. Todo o conteúdo é persistido no **localStorage** do navegador — não há backend nem Docker.
+
 ## Funcionalidades
 
 ### Páginas públicas
@@ -21,7 +23,7 @@ O sistema reúne FAQ por categorias, comunicados oficiais e um painel administra
 - Suporte a **imagem** e **vídeo** (YouTube/Vimeo) nas respostas
 - Publicação e edição de comunicados
 
-**Credenciais do seed:**
+**Credenciais de acesso:**
 
 | Campo | Valor |
 |-------|-------|
@@ -32,16 +34,15 @@ O sistema reúne FAQ por categorias, comunicados oficiais e um painel administra
 
 ```
 faqsenac/
-├── dev.sh        # Sobe backend e frontend de uma vez
+├── dev.sh        # Sobe o frontend
 ├── frontend/     # React 18 + Vite + TypeScript (SPA)
-├── backend/      # NestJS + Prisma + PostgreSQL (API REST)
 ├── guidelines/   # Documentação técnica do projeto
 └── fixtures/     # Materiais de referência acadêmica
 ```
 
 ## Como rodar
 
-**Requisitos:** Docker, Docker Compose e Node.js (npm).
+**Requisitos:** Node.js (npm).
 
 ### Opção rápida (recomendada)
 
@@ -51,52 +52,37 @@ Na raiz do repositório:
 ./dev.sh
 ```
 
-O script sobe o backend (Docker), aguarda a API ficar pronta, inicia o frontend e cria `frontend/.env` automaticamente, se necessário.
-
-| Serviço  | URL |
-|----------|-----|
-| Frontend | http://localhost:5173 |
-| API      | http://localhost:3000 |
-
-Pressione **Ctrl+C** para encerrar frontend e backend. Logs do Docker: `cd backend && docker compose logs -f`.
-
-### Opção manual (dois terminais)
-
-**1. Backend (API + banco)**
-
-```bash
-cd backend
-docker compose up --build
-```
-
-Na primeira execução, o container aplica as migrações, popula o banco (se vazio) e sobe a API em `http://localhost:3000`.
-
-**2. Frontend**
+### Opção manual
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-O arquivo `.env` do frontend deve apontar para a API:
+A aplicação sobe em **http://localhost:5173**.
 
-```env
-VITE_API_URL=http://localhost:3000
-```
+Pressione **Ctrl+C** para encerrar.
+
+## Persistência de dados
+
+| Chave localStorage | Conteúdo |
+|--------------------|----------|
+| `unifaq-content` | Home, categorias FAQ, perguntas e comunicados |
+| `unifaq-auth` | Sessão do administrador |
+
+Na primeira visita, o app carrega o conteúdo padrão de `frontend/src/app/data/defaultContent.ts`. Alterações feitas no painel admin ficam salvas no navegador.
+
+Para resetar os dados, limpe o localStorage do site em DevTools → Application → Local Storage.
 
 ## Stack
 
 | Camada | Tecnologias |
 |--------|-------------|
 | Frontend | React 18, Vite, TypeScript, Tailwind CSS, React Router 7 |
-| Backend | NestJS, Prisma ORM, PostgreSQL, JWT |
-| Infra | Docker Compose (PostgreSQL + API) |
+| Dados | localStorage (sem backend) |
 
 ## Documentação adicional
 
-- [frontend/README.md](frontend/README.md) — scripts, variáveis de ambiente e desenvolvimento do SPA
-- [backend/README.md](backend/README.md) — endpoints REST, seed, migrações e exemplos com `curl`
+- [frontend/README.md](frontend/README.md) — scripts e desenvolvimento do SPA
 - [guidelines/Guidelines.md](guidelines/Guidelines.md) — contexto técnico e decisões de arquitetura
-

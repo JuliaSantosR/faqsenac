@@ -2,17 +2,16 @@
 
 SPA React + Vite + TypeScript da plataforma UniFAQ.
 
+Nesta branch, o app roda **standalone**: todo o conteúdo é lido e gravado no **localStorage** do navegador.
+
 ## Desenvolvimento
 
 ```bash
 npm install
-cp .env.example .env
 npm run dev
 ```
 
 A aplicação sobe em `http://localhost:5173`.
-
-Certifique-se de que o backend está rodando em `http://localhost:3000` (veja [backend/README.md](../backend/README.md)).
 
 ## Scripts
 
@@ -24,12 +23,6 @@ Certifique-se de que o backend está rodando em `http://localhost:3000` (veja [b
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier |
 
-## Variáveis de ambiente
-
-| Variável | Descrição |
-|----------|-----------|
-| `VITE_API_URL` | URL base da API NestJS (ex.: `http://localhost:3000`) |
-
 ## Rotas
 
 | Rota | Página |
@@ -40,10 +33,19 @@ Certifique-se de que o backend está rodando em `http://localhost:3000` (veja [b
 | `/login` | Login do administrador |
 | `/admin` | Painel administrativo (protegido) |
 
-## Credenciais de acesso admin (backend seed)
+## Credenciais de acesso admin
 
 - E-mail: `admin@senac.local`
 - Senha: `admin123`
+
+## Persistência
+
+| Chave | Descrição |
+|-------|-----------|
+| `unifaq-content` | Conteúdo do site (home, FAQ, comunicados) |
+| `unifaq-auth` | Sessão do administrador |
+
+Conteúdo inicial: `src/app/data/defaultContent.ts`.
 
 ## Assets estáticos
 

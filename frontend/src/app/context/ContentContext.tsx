@@ -7,11 +7,15 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { defaultSiteContent } from '../data/defaultContent';
 import type { Announcement, FAQCategory, FAQEntry, HomeContent, SiteContent } from '../types/content';
-import { isFAQIcon } from '../utils/faqIcons';
+import {
+  CONTENT_STORAGE_KEY,
+  createId,
+  loadStoredContent,
+  normalizeContent,
+  saveStoredContent,
+} from '../services/contentStorage';
 import { useAuth } from './AuthContext';
-import { apiRequest } from '../services/api';
 
 interface CreateAnnouncementInput {
   date: string;
@@ -53,158 +57,58 @@ interface ContentContextValue {
 
 const ContentContext = createContext<ContentContextValue | undefined>(undefined);
 
-interface ApiCategory {
-  id: string;
-  label: string;
-  description: string;
-}
-
-interface ApiEntry {
-  id: string;
-  question: string;
-  answer: string;
-  categoryId: string;
-  imageUrl?: string;
-  videoUrl?: string;
-}
-
-interface ApiAnnouncement {
-  id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-}
-
-function normalizeContent(content: SiteContent): SiteContent {
-  return {
-    home: {
-      ...defaultSiteContent.home,
-      ...content.home,
-    },
-    faqCategories: (content.faqCategories ?? []).map((category) => ({
-      ...category,
-      icon: isFAQIcon(category.icon) ? category.icon : 'FileText',
-      items: category.items ?? [],
-    })),
-    announcements: content.announcements ?? [],
-  };
-}
-
-function toIsoDate(isoDateTime: string) {
-  const parsed = new Date(isoDateTime);
-  if (Number.isNaN(parsed.getTime())) {
-    return new Date().toISOString().slice(0, 10);
+function requireAuth(token: string | null) {
+  if (!token) {
+    throw new Error('Faça login novamente para editar o conteúdo.');
   }
-  return parsed.toISOString().slice(0, 10);
-}
-
-function toSiteContent(
-  categories: ApiCategory[],
-  entries: ApiEntry[],
-  announcements: ApiAnnouncement[],
-  currentHome: HomeContent,
-): SiteContent {
-  const fallbackCategory = defaultSiteContent.faqCategories[0];
-
-  const faqCategories: FAQCategory[] = categories.map((category, index) => {
-    const defaultCategory = defaultSiteContent.faqCategories[index] ?? fallbackCategory;
-    const items: FAQEntry[] = entries
-      .filter((entry) => entry.categoryId === category.id)
-      .map((entry) => ({
-        id: entry.id,
-        question: entry.question,
-        answer: entry.answer,
-        imageUrl: entry.imageUrl ?? '',
-        videoUrl: entry.videoUrl ?? '',
-      }));
-
-    return {
-      id: category.id,
-      label: category.label,
-      description: category.description,
-      summary: defaultCategory?.summary ?? '',
-      icon: isFAQIcon(defaultCategory?.icon) ? defaultCategory.icon : 'FileText',
-      items,
-    };
-  });
-
-  const normalizedAnnouncements: Announcement[] = announcements.map((announcement) => ({
-    id: announcement.id,
-    title: announcement.title,
-    description: announcement.description,
-    details: '',
-    category: 'Comunicado',
-    priority: 'medium',
-    date: toIsoDate(announcement.createdAt),
-  }));
-
-  return normalizeContent({
-    home: currentHome,
-    faqCategories,
-    announcements: normalizedAnnouncements,
-  });
 }
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
-  const [content, setContent] = useState<SiteContent>(() => normalizeContent(defaultSiteContent));
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadRemoteContent = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const [categories, entries, announcements] = await Promise.all([
-        apiRequest<ApiCategory[]>('/faq/categories'),
-        apiRequest<ApiEntry[]>('/faq/entries'),
-        apiRequest<ApiAnnouncement[]>('/announcements'),
-      ]);
-
-      setContent((current) => toSiteContent(categories, entries, announcements, current.home));
-    } catch (loadError) {
-      const message =
-        loadError instanceof Error
-          ? loadError.message
-          : 'Não foi possível carregar os dados do backend.';
-      setError(message);
-      setContent((current) => normalizeContent(current));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [content, setContent] = useState<SiteContent>(() => loadStoredContent());
 
   useEffect(() => {
-    void loadRemoteContent();
-  }, [loadRemoteContent]);
+    saveStoredContent(content);
+  }, [content]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === CONTENT_STORAGE_KEY) {
+        setContent(loadStoredContent());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const reload = useCallback(async () => {
+    setContent(loadStoredContent());
+  }, []);
 
   const value = useMemo<ContentContextValue>(
     () => ({
       content,
-      isLoading,
-      error,
+      isLoading: false,
+      error: null,
       updateHomeContent: (updates) => {
-        setContent((current) => ({
-          ...current,
-          home: {
-            ...current.home,
-            ...updates,
-          },
-        }));
+        requireAuth(token);
+        setContent((current) =>
+          normalizeContent({
+            ...current,
+            home: {
+              ...current.home,
+              ...updates,
+            },
+          }),
+        );
       },
       updateFAQCategory: async (categoryId, updates) => {
-        if (!token) {
-          throw new Error('Faça login novamente para editar categorias.');
-        }
-
-        const updatedCategory = await apiRequest<ApiCategory>(`/faq/categories/${categoryId}`, {
-          method: 'PATCH',
-          token,
-          body: JSON.stringify({
-            label: updates.label.trim(),
-            description: updates.description.trim(),
-          }),
-        });
+        requireAuth(token);
 
         setContent((current) =>
           normalizeContent({
@@ -213,8 +117,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               category.id === categoryId
                 ? {
                     ...category,
-                    label: updatedCategory.label,
-                    description: updatedCategory.description,
+                    label: updates.label.trim(),
+                    description: updates.description.trim(),
                   }
                 : category,
             ),
@@ -222,21 +126,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         );
       },
       createFAQEntry: async (categoryId, entry) => {
-        if (!token) {
-          throw new Error('Faça login novamente para criar perguntas.');
-        }
+        requireAuth(token);
 
-        const createdEntry = await apiRequest<ApiEntry>('/faq/entries', {
-          method: 'POST',
-          token,
-          body: JSON.stringify({
-            question: entry.question.trim(),
-            answer: entry.answer.trim(),
-            categoryId,
-            imageUrl: entry.imageUrl.trim(),
-            videoUrl: entry.videoUrl.trim(),
-          }),
-        });
+        const newEntry: FAQEntry = {
+          id: createId('faq'),
+          question: entry.question.trim(),
+          answer: entry.answer.trim(),
+          imageUrl: entry.imageUrl.trim(),
+          videoUrl: entry.videoUrl.trim(),
+        };
 
         setContent((current) =>
           normalizeContent({
@@ -245,16 +143,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               category.id === categoryId
                 ? {
                     ...category,
-                    items: [
-                      ...category.items,
-                      {
-                        id: createdEntry.id,
-                        question: createdEntry.question,
-                        answer: createdEntry.answer,
-                        imageUrl: createdEntry.imageUrl ?? '',
-                        videoUrl: createdEntry.videoUrl ?? '',
-                      },
-                    ],
+                    items: [...category.items, newEntry],
                   }
                 : category,
             ),
@@ -262,54 +151,34 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         );
       },
       updateFAQEntry: async (categoryId, entryId, entry) => {
-        if (!token) {
-          throw new Error('Faça login novamente para editar perguntas.');
-        }
-
-        const updatedEntry = await apiRequest<ApiEntry>(`/faq/entries/${entryId}`, {
-          method: 'PATCH',
-          token,
-          body: JSON.stringify({
-            question: entry.question.trim(),
-            answer: entry.answer.trim(),
-            categoryId,
-            imageUrl: entry.imageUrl.trim(),
-            videoUrl: entry.videoUrl.trim(),
-          }),
-        });
+        requireAuth(token);
 
         setContent((current) =>
           normalizeContent({
             ...current,
-            faqCategories: current.faqCategories.map((category) => ({
-              ...category,
-              items:
-                category.id === categoryId
-                  ? category.items.map((item) =>
+            faqCategories: current.faqCategories.map((category) =>
+              category.id === categoryId
+                ? {
+                    ...category,
+                    items: category.items.map((item) =>
                       item.id === entryId
                         ? {
                             ...item,
-                            question: updatedEntry.question,
-                            answer: updatedEntry.answer,
-                            imageUrl: updatedEntry.imageUrl ?? '',
-                            videoUrl: updatedEntry.videoUrl ?? '',
+                            question: entry.question.trim(),
+                            answer: entry.answer.trim(),
+                            imageUrl: entry.imageUrl.trim(),
+                            videoUrl: entry.videoUrl.trim(),
                           }
                         : item,
-                    )
-                  : category.items.filter((item) => item.id !== entryId),
-            })),
+                    ),
+                  }
+                : category,
+            ),
           }),
         );
       },
       deleteFAQEntry: async (categoryId, entryId) => {
-        if (!token) {
-          throw new Error('Faça login novamente para remover perguntas.');
-        }
-
-        await apiRequest<void>(`/faq/entries/${entryId}`, {
-          method: 'DELETE',
-          token,
-        });
+        requireAuth(token);
 
         setContent((current) =>
           normalizeContent({
@@ -326,50 +195,27 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         );
       },
       createAnnouncement: async (announcement) => {
-        if (!token) {
-          throw new Error('Faça login novamente para criar comunicados.');
-        }
+        requireAuth(token);
 
-        const createdAnnouncement = await apiRequest<ApiAnnouncement>('/announcements', {
-          method: 'POST',
-          token,
-          body: JSON.stringify({
-            title: announcement.title.trim(),
-            description: announcement.description.trim(),
-          }),
-        });
+        const newAnnouncement: Announcement = {
+          id: createId('announcement'),
+          date: announcement.date,
+          category: announcement.category.trim(),
+          priority: announcement.priority,
+          title: announcement.title.trim(),
+          description: announcement.description.trim(),
+          details: announcement.details.trim(),
+        };
 
         setContent((current) =>
           normalizeContent({
             ...current,
-            announcements: [
-              ...current.announcements,
-              {
-                id: createdAnnouncement.id,
-                title: createdAnnouncement.title,
-                description: createdAnnouncement.description,
-                details: '',
-                category: 'Comunicado',
-                priority: 'medium',
-                date: toIsoDate(createdAnnouncement.createdAt),
-              },
-            ],
+            announcements: [...current.announcements, newAnnouncement],
           }),
         );
       },
       updateAnnouncement: async ({ id, ...updates }) => {
-        if (!token) {
-          throw new Error('Faça login novamente para editar comunicados.');
-        }
-
-        const updatedAnnouncement = await apiRequest<ApiAnnouncement>(`/announcements/${id}`, {
-          method: 'PATCH',
-          token,
-          body: JSON.stringify({
-            title: updates.title.trim(),
-            description: updates.description.trim(),
-          }),
-        });
+        requireAuth(token);
 
         setContent((current) =>
           normalizeContent({
@@ -378,9 +224,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               announcement.id === id
                 ? {
                     ...announcement,
-                    title: updatedAnnouncement.title,
-                    description: updatedAnnouncement.description,
-                    date: toIsoDate(updatedAnnouncement.createdAt),
+                    date: updates.date,
+                    category: updates.category.trim(),
+                    priority: updates.priority,
+                    title: updates.title.trim(),
+                    description: updates.description.trim(),
+                    details: updates.details.trim(),
                   }
                 : announcement,
             ),
@@ -388,14 +237,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         );
       },
       deleteAnnouncement: async (announcementId) => {
-        if (!token) {
-          throw new Error('Faça login novamente para remover comunicados.');
-        }
-
-        await apiRequest<void>(`/announcements/${announcementId}`, {
-          method: 'DELETE',
-          token,
-        });
+        requireAuth(token);
 
         setContent((current) =>
           normalizeContent({
@@ -406,9 +248,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           }),
         );
       },
-      reload: loadRemoteContent,
+      reload,
     }),
-    [content, error, isLoading, loadRemoteContent, token],
+    [content, reload, token],
   );
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
